@@ -1,0 +1,27 @@
+{
+    "name": "vedebel/uawebchallenge",
+    "description": "Sitemap generator",
+    "authors": [
+        {
+            "name": "Eugene Lebediev",
+            "email": "hollowj33@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "slim/slim": "2.*",
+        "paquettg/php-html-parser": "dev-master",
+        "codeception/codeception": "2.*",
+        "maniaplanet/manialib-xml": "0.2.*@dev",
+        "pimple/pimple": "~3.0"
+    },
+    "PSR-4": {
+        "Vebedel\\Sitemap": "src/Vedebel/Sitemap"
+    },
+    "repositories":[
+        {
+            "type": "git",
+            "url": "https://github.com/vedebel/uawebchallenge.git"
+        }
+    ]
+}
