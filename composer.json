@@ -13,10 +13,16 @@
         "paquettg/php-html-parser": "dev-master",
         "codeception/codeception": "2.*",
         "maniaplanet/manialib-xml": "0.2.*@dev",
-        "pimple/pimple": "~3.0"
+        "pimple/pimple": "~3.0",
+        "predis/predis": "1.1.*@dev",
+        "phpsec/phpsec":"0.6.*",
+        "php-curl-class/php-curl-class": "dev-master",
+        "cocur/background-process": "@stable"
     },
-    "PSR-4": {
-        "Vebedel\\Sitemap": "src/Vedebel/Sitemap"
+    "autoload": {
+        "psr-4": {
+            "Vedebel\\Sitemap\\": "src/Vedebel/Sitemap"
+        }
     },
     "repositories":[
         {

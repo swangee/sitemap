@@ -4,6 +4,106 @@
 		"selected_items":
 		[
 			[
+				"res",
+				"rescan"
+			],
+			[
+				"opt",
+				"options"
+			],
+			[
+				"pa",
+				"passedToken"
+			],
+			[
+				"con",
+				"container"
+			],
+			[
+				"json",
+				"json_encode"
+			],
+			[
+				"link",
+				"linksAmount"
+			],
+			[
+				"form",
+				"formInstance"
+			],
+			[
+				"su",
+				"subscribe"
+			],
+			[
+				"op",
+				"option	Tag"
+			],
+			[
+				"li",
+				"link	Tag"
+			],
+			[
+				"load",
+				"$loadLinksAttempt	mixed"
+			],
+			[
+				"links",
+				"$linksAmount	mixed"
+			],
+			[
+				"array_key",
+				"array_key_exists"
+			],
+			[
+				"met",
+				"metaRobots"
+			],
+			[
+				"fetch",
+				"fetchColumn"
+			],
+			[
+				"get",
+				"getPageInfo()	mixed"
+			],
+			[
+				"strp",
+				"strpos"
+			],
+			[
+				"preg_",
+				"preg_match"
+			],
+			[
+				"parse",
+				"parse_url"
+			],
+			[
+				"strto",
+				"strtolower"
+			],
+			[
+				"chec",
+				"checkLink"
+			],
+			[
+				"cra",
+				"crawlPages"
+			],
+			[
+				"array_f",
+				"array_filter"
+			],
+			[
+				"str_re",
+				"str_replace"
+			],
+			[
+				"asser",
+				"assertTrue"
+			],
+			[
 				"cou",
 				"count"
 			],
@@ -44,26 +144,18 @@
 	"buffers":
 	[
 		{
-			"file": "composer.json",
+			"file": "app/routes.php",
 			"settings":
 			{
-				"buffer_size": 503,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "app/index.php",
-			"settings":
-			{
-				"buffer_size": 45,
+				"buffer_size": 2207,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "composer.lock",
+			"file": "composer.json",
 			"settings":
 			{
-				"buffer_size": 60325,
+				"buffer_size": 889,
 				"line_ending": "Unix"
 			}
 		}
@@ -161,10 +253,38 @@
 	"expanded_folders":
 	[
 		"/D/OpenServer/domains/uawc.loc",
-		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap"
+		"/D/OpenServer/domains/uawc.loc/app"
 	],
 	"file_history":
 	[
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/Sitemap.php",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/page.html",
+		"/D/OpenServer/domains/uawc.loc/composer.json",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/LinksStorage.php",
+		"/D/OpenServer/domains/uawc.loc/private/sitemap.xml",
+		"/D/OpenServer/domains/uawc.loc/private/generate.php",
+		"/D/OpenServer/domains/uawc.loc/app/di.php",
+		"/D/OpenServer/domains/uawc.loc/app/templates/processing.php",
+		"/D/OpenServer/domains/uawc.loc/app/js/main.js",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/SQLiteLinksStorage.php",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemappage.html",
+		"/D/OpenServer/domains/uawc.loc/sitemap.xml",
+		"/D/OpenServer/domains/uawc.loc/app/templates/index.php",
+		"/D/OpenServer/domains/uawc.loc/app/.htaccess",
+		"/D/OpenServer/domains/uawc.loc/app/routes.php",
+		"/D/OpenServer/domains/uawc.loc/app/index.php",
+		"/C/ProgramFiles_x86/redis-2.8.19/redis.windows.conf",
+		"/D/OpenServer/domains/uawc.loc/app/js/Parsley.js-2.0.7.zip",
+		"/D/OpenServer/domains/uawc.loc/app/js/verify.notify.min.js",
+		"/D/OpenServer/domains/uawc.loc/app/js/parsley.min.js",
+		"/D/OpenServer/domains/uawc.loc/tests/unit/SitemapTest.php",
+		"/D/OpenServer/domains/uawc.loc/tests/unit/SQLiteLinksStorageTest.php",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/lol.txt",
+		"/D/OpenServer/domains/uawc.loc/tests/unit/SQLiteLinksStorage.php",
+		"/D/OpenServer/domains/uawc.loc/tests/unit/_bootstrap.php",
+		"/D/OpenServer/domains/uawc.loc/tests/_bootstrap.php",
+		"/D/OpenServer/domains/uawc.loc/.gitignore",
+		"/D/OpenServer/domains/uawc.loc/composer.lock",
 		"/C/Users/Евгений/AppData/Roaming/Sublime Text 3/Packages/User/composer-sublime.sublime-settings",
 		"/C/Users/Евгений/AppData/Roaming/Sublime Text 3/Packages/Composer/composer-sublime.sublime-settings",
 		"/C/Users/Евгений/Desktop/ruby_script.rb",
@@ -264,18 +384,11 @@
 		"/D/OpenServer/domains/dviss/web/themes/dviss/patient/fullCard.twig",
 		"/D/OpenServer/domains/dviss/models/PatientTreatment.php",
 		"/D/OpenServer/domains/graphml/graphml_generator.php",
-		"/C/Users/Евгений/AppData/Local/Temp/fz3temp-1/DoctorController.php",
-		"/D/OpenServer/domains/dviss/web/themes/dviss/patient/fullCardEdit.twig",
-		"/D/OpenServer/domains/dviss/vendor/composer/installed.json",
-		"/D/OpenServer/domains/dviss/vendor/yiisoft/yii2/i18n/I18N.php",
-		"/D/OpenServer/domains/dviss/web/index.php",
-		"/C/Users/Евгений/.ssh/known_hosts",
-		"/C/Users/Евгений/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
-		"/C/Users/Евгений/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings"
+		"/C/Users/Евгений/AppData/Local/Temp/fz3temp-1/DoctorController.php"
 	],
 	"find":
 	{
-		"height": 24.0
+		"height": 38.0
 	},
 	"find_in_files":
 	{
@@ -289,6 +402,18 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"loadPage",
+			"path",
+			"crawlPages",
+			"exit",
+			"load",
+			"host",
+			"isLoaded",
+			"loadStr",
+			"loadFromUrl",
+			"getPageInfo",
+			"addLink",
+			"codecept_debug",
 			"fixed_array_search_foreach",
 			"assets/build",
 			"serverAppPath",
@@ -329,24 +454,54 @@
 	"groups":
 	[
 		{
-			"selected": 1,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "composer.json",
+					"file": "app/routes.php",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 503,
+						"buffer_size": 2207,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								463,
-								470
+								1666,
+								1672
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"side_bar_folders_auto_load_folder": 1,
+							"syntax": "Packages/PHP/PHP.tmLanguage"
+						},
+						"translation.x": -0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "composer.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 889,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								527,
+								527
 							]
 						],
 						"settings":
@@ -362,68 +517,6 @@
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "app/index.php",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 45,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								45,
-								45
-							]
-						],
-						"settings":
-						{
-							"auto_complete": false,
-							"open_with_edit": true,
-							"side_bar_folders_auto_load_folder": 1,
-							"syntax": "Packages/PHP/PHP.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "composer.lock",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 60325,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"side_bar_folders_auto_load_folder": 1,
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -506,7 +599,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 219.0,
+	"side_bar_width": 315.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{
