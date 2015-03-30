@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"setT",
+				"setInterval〔function〕"
+			],
+			[
+				"error_",
+				"error_reporting"
+			],
+			[
+				"process",
+				"processIsRunning"
+			],
+			[
 				"res",
 				"rescan"
 			],
@@ -147,16 +159,32 @@
 			"file": "app/routes.php",
 			"settings":
 			{
-				"buffer_size": 2207,
+				"buffer_size": 2874,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "composer.json",
+			"file": "src/Vedebel/Sitemap/Sitemap.php",
 			"settings":
 			{
-				"buffer_size": 889,
-				"line_ending": "Unix"
+				"buffer_size": 7620,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "app/index.php",
+			"settings":
+			{
+				"buffer_size": 176,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "app/js/main.js",
+			"settings":
+			{
+				"buffer_size": 1542,
+				"line_ending": "Windows"
 			}
 		}
 	],
@@ -166,6 +194,10 @@
 		"height": 400.0,
 		"selected_items":
 		[
+			[
+				"i",
+				"Package Control: Install Package"
+			],
 			[
 				"inst",
 				"Package Control: Install Package"
@@ -225,10 +257,6 @@
 			[
 				"insta",
 				"Package Control: Install Package"
-			],
-			[
-				"i",
-				"Package Control: Install Package"
 			]
 		],
 		"width": 672.0
@@ -253,26 +281,42 @@
 	"expanded_folders":
 	[
 		"/D/OpenServer/domains/uawc.loc",
-		"/D/OpenServer/domains/uawc.loc/app"
+		"/D/OpenServer/domains/uawc.loc/app",
+		"/D/OpenServer/domains/uawc.loc/app/js",
+		"/D/OpenServer/domains/uawc.loc/app/templates",
+		"/D/OpenServer/domains/uawc.loc/src",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap"
 	],
 	"file_history":
 	[
-		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/Sitemap.php",
-		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/page.html",
-		"/D/OpenServer/domains/uawc.loc/composer.json",
-		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/LinksStorage.php",
-		"/D/OpenServer/domains/uawc.loc/private/sitemap.xml",
-		"/D/OpenServer/domains/uawc.loc/private/generate.php",
+		"/D/OpenServer/domains/uawc.loc/sftp-config.json",
 		"/D/OpenServer/domains/uawc.loc/app/di.php",
 		"/D/OpenServer/domains/uawc.loc/app/templates/processing.php",
+		"/D/OpenServer/domains/uawc.loc/app/index.php",
+		"/D/OpenServer/domains/uawc.loc/private/generate.php",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/Sitemap.php",
+		"/D/OpenServer/domains/uawc.loc/vendor/cocur/background-process/src/BackgroundProcess.php",
+		"/D/wgvagrant/bootstrap.sh",
+		"/D/OpenServer/domains/uawc.loc/app/templates/index.php",
+		"/D/OpenServer/domains/uawc.loc/app/test.log",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/page.html",
+		"/D/OpenServer/domains/uawc.loc/private/sitemap.xml",
+		"/D/OpenServer/domains/uawc.loc/app/tmp/e87122b767ac25165f1f146957281fd0_1427543358.xml",
+		"/D/OpenServer/domains/uawc.loc/app/tmp/e87122b767ac25165f1f146957281fd0_1427543299.xml",
+		"/D/wgvagrant/Vagrantfile",
+		"/D/OpenServer/domains/uawc.loc/app/routes.php",
+		"/D/OpenServer/domains/uawc.loc/.gitignore",
+		"/D/wgvagrant/config.ssh",
+		"/D/OpenServer/domains/uawc.loc/composer.json",
+		"/C/Users/Евгений/AppData/Local/Temp/fz3temp-1/hollowj.pp.ua",
+		"/D/wgvagrant/setup_version",
+		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/LinksStorage.php",
 		"/D/OpenServer/domains/uawc.loc/app/js/main.js",
 		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemap/SQLiteLinksStorage.php",
 		"/D/OpenServer/domains/uawc.loc/src/Vedebel/Sitemappage.html",
 		"/D/OpenServer/domains/uawc.loc/sitemap.xml",
-		"/D/OpenServer/domains/uawc.loc/app/templates/index.php",
 		"/D/OpenServer/domains/uawc.loc/app/.htaccess",
-		"/D/OpenServer/domains/uawc.loc/app/routes.php",
-		"/D/OpenServer/domains/uawc.loc/app/index.php",
 		"/C/ProgramFiles_x86/redis-2.8.19/redis.windows.conf",
 		"/D/OpenServer/domains/uawc.loc/app/js/Parsley.js-2.0.7.zip",
 		"/D/OpenServer/domains/uawc.loc/app/js/verify.notify.min.js",
@@ -283,7 +327,6 @@
 		"/D/OpenServer/domains/uawc.loc/tests/unit/SQLiteLinksStorage.php",
 		"/D/OpenServer/domains/uawc.loc/tests/unit/_bootstrap.php",
 		"/D/OpenServer/domains/uawc.loc/tests/_bootstrap.php",
-		"/D/OpenServer/domains/uawc.loc/.gitignore",
 		"/D/OpenServer/domains/uawc.loc/composer.lock",
 		"/C/Users/Евгений/AppData/Roaming/Sublime Text 3/Packages/User/composer-sublime.sublime-settings",
 		"/C/Users/Евгений/AppData/Roaming/Sublime Text 3/Packages/Composer/composer-sublime.sublime-settings",
@@ -374,17 +417,7 @@
 		"/C/Users/Евгений/Desktop/koans/path_to_enlightenment.rb",
 		"/C/Users/Евгений/Desktop/koans/README.rdoc",
 		"/C/Users/Евгений/Desktop/koans/Rakefile",
-		"/C/Users/Евгений/Desktop/html5-boilerplate_v5.0.0/js/plugins.js",
-		"/C/Users/Евгений/Desktop/html5-boilerplate_v5.0.0/js/main.js",
-		"/C/Users/Евгений/Desktop/drupal-8.0.0-beta6/drupal-8.0.0-beta6/index.php",
-		"/C/Users/Евгений/Desktop/drupal-8.0.0-beta6/drupal-8.0.0-beta6/core/vendor/autoload.php",
-		"/C/Users/Евгений/AppData/Local/Temp/fz3temp-1/web.php",
-		"/C/Users/Евгений/AppData/Local/Temp/fz3temp-1/PatientController.php",
-		"/D/OpenServer/domains/dviss/config/web.php",
-		"/D/OpenServer/domains/dviss/web/themes/dviss/patient/fullCard.twig",
-		"/D/OpenServer/domains/dviss/models/PatientTreatment.php",
-		"/D/OpenServer/domains/graphml/graphml_generator.php",
-		"/C/Users/Евгений/AppData/Local/Temp/fz3temp-1/DoctorController.php"
+		"/C/Users/Евгений/Desktop/html5-boilerplate_v5.0.0/js/plugins.js"
 	],
 	"find":
 	{
@@ -402,6 +435,7 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"config",
 			"loadPage",
 			"path",
 			"crawlPages",
@@ -463,25 +497,30 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2207,
+						"buffer_size": 2874,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1666,
-								1672
+								2281,
+								2281
 							]
 						],
 						"settings":
 						{
 							"auto_complete": false,
+							"incomplete_sync": null,
+							"remote_loading": false,
 							"side_bar_folders_auto_load_folder": 1,
-							"syntax": "Packages/PHP/PHP.tmLanguage"
+							"synced": true,
+							"syntax": "Packages/PHP/PHP.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
 						},
-						"translation.x": -0.0,
-						"translation.y": 0.0,
+						"translation.x": 0.0,
+						"translation.y": 288.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
@@ -489,34 +528,104 @@
 				},
 				{
 					"buffer": 1,
-					"file": "composer.json",
+					"file": "src/Vedebel/Sitemap/Sitemap.php",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 889,
+						"buffer_size": 7620,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								527,
-								527
+								2181,
+								2191
 							]
 						],
 						"settings":
 						{
-							"auto_complete": true,
+							"incomplete_sync": null,
+							"remote_loading": false,
 							"side_bar_folders_auto_load_folder": 1,
-							"syntax": "Packages/JavaScript/JSON.tmLanguage",
-							"tab_size": 4,
+							"synced": true,
+							"syntax": "Packages/PHP/PHP.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 912.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "app/index.php",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 176,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								162,
+								162
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"incomplete_sync": null,
+							"remote_loading": false,
+							"side_bar_folders_auto_load_folder": 1,
+							"synced": true,
+							"syntax": "Packages/PHP/PHP.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "app/js/main.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1542,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1517,
+								1517
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"incomplete_sync": null,
+							"remote_loading": false,
+							"side_bar_folders_auto_load_folder": 1,
+							"synced": true,
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 3,
 					"type": "text"
 				}
 			]
@@ -560,6 +669,10 @@
 	"output.find_results":
 	{
 		"height": 0.0
+	},
+	"output.sftp":
+	{
+		"height": 104.0
 	},
 	"project": "sitemap.sublime-project",
 	"replace":

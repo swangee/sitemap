@@ -21,10 +21,38 @@
           data: data,
           dataType: 'json',
           success: function(response) {
-            alert(response.sitemap)
+            
           }
         });
+
+        getState(data.url);
     });
   });
+
+  function getState(url) {
+    var finished = false;
+    var html = '<h3>Процесс парсинга</h3>';
+    html += '<p class="message"></p>';
+    $('.generator-form').replaceWith(html);
+    var interval = setInterval(function() {
+      $.ajax({
+        url: '/processing',
+        type: 'POST',
+        data: {
+          url: url
+        },
+        dataType: 'json',
+        success: function(response) {
+          if (response.finished) {
+            finished = true;
+            $('.message').html('Завершено. Ссылка на XML: <a href="' + response.xml + '">открыть</a>');
+            clearInterval(interval);
+          } else {
+            $('.message').html('Просканировано ' + response.added + ' из ' + response.limit + ' ссылок');
+          }
+        }
+      });
+    }, 3000);
+  }
 
 })(jQuery);

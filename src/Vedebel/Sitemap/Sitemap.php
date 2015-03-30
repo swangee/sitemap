@@ -97,6 +97,11 @@ class Sitemap
     return $this->storage->loadScan($this->url);
   }
 
+  public function linksAdded()
+  {
+    return $this->storage->countLinks($this->url);
+  }
+
   public function checkLink($link) {
     if (preg_match('@^https?://@', $link) && strpos($link, $this->host) === false) {
       return false;
