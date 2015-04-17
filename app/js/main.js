@@ -3,30 +3,62 @@
   $('.generator-form [type=submit]').on('click', function(e) {
     e.preventDefault();
 
-    $('.generator-form').validate(function(form) {
-      var form = $('.generator-form');
-      var url = form.find('#url').val(),
-         data = {},
-         email = form.find('#email').val(),
-         linksAmount = form.find('#links-amount').val();
+    var url = $('.generator-form #url').val();
+    var limit = $('.generator-form #links-amount').val();
+    var error = false;
+    var email = $('.generator-form #email').val();
 
-        data.url = url;
-        data.email = email;
-        data.linksAmount = linksAmount;
-        data.csrfToken = $('meta[name=_csrf]').attr('content');
+    if (url.indexOf('.') === -1 || url.length < 5) {
+      $('.generator-form #url').parent().addClass('has-error');
+      error = true;
+    } else {
+      $('.generator-form #url').parent().removeClass('has-error');
+      url = $('.generator-form #protocol').val() + url.replace('http://', '').replace('https://', '');
+    }
+    if (email.indexOf('@') === -1 || email.length < 4) {
+      $('.generator-form #email').parent().addClass('has-error');
+      error = true;
+    } else {
+      $('.generator-form #email').parent().removeClass('has-error');
+    }
 
-        $.ajax({
-          url: '/start',
-          type: 'POST',
-          data: data,
-          dataType: 'json',
-          success: function(response) {
-            
-          }
-        });
+    if (!error) {
+      $.ajax({
+        url: '/start',
+        type: 'POST',
+        data: {
+          url: url,
+          email: email,
+          csrfToken: $('meta[name=_csrf]').attr('content'),
+          linksAmount: limit
+        },
+        dataType: 'json',
+        success: function(response) {
+          localStorage.setItem('processToken', response.processToken);
+          console.log(response);
+        }
+      })
+    }
+  });
 
-        getState(data.url);
-    });
+  $('.protocol-select li').on('click', function() {
+    $('.generator-form #protocol').val($(this).text());
+  });
+
+  $('.check-btn').on('click', function() {
+    if (token = localStorage.getItem('processToken')) {
+      $.ajax({
+        url: '/processing',
+        type: 'POST',
+        data: {
+          processToken: token
+        },
+        dataType: 'json',
+        success: function(response) {
+          console.log(response);
+        }
+      })
+    }
   });
 
   function getState(url) {

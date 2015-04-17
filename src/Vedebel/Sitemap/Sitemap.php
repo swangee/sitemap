@@ -14,9 +14,12 @@ class Sitemap
   private $fragment;
   private $linksCache;
 
+  private $logFile;
+  private $debug;
+  private $debugMode;
+
   private $limit;
   private $errors;
-  private $debug;
   private $scanned;
   private $maxDepth;
 
@@ -37,11 +40,17 @@ class Sitemap
     $this->url = $url;
     $this->limit = (!empty($options['limit']) ? $options['limit'] : 1000);
     $this->errors = [];
-    $this->debug = false;
     $this->parser = $parser;
     $this->storage = $storage;
     $this->scanned = [];
     $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
+
+    $this->debug = false;
+    $this->logFile = dirname(__FILE__) . '/log.txt';
+    if (false === file_put_contents($this->logFile, '')) {
+      $this->log('Can\'t create log file', $padding);
+    }
+    $this->debugMode = (!empty($options['debugMode']) ? $options['debugMode'] : 2);
   }
 
   public function setLoader(\Curl\Curl $loader)
@@ -106,6 +115,8 @@ class Sitemap
     if (preg_match('@^https?://@', $link) && strpos($link, $this->host) === false) {
       return false;
     } elseif (!empty($this->uri()) && strpos($link, $this->uri()) === false) {
+      return false;
+    } elseif (strpos($link, 'javascript:') !== false) {
       return false;
     }
     return true;
@@ -281,7 +292,11 @@ class Sitemap
   private function log($message, $padding = 0)
   {
     if ($this->debug) {
-      echo str_repeat("\t", $padding) . $message . PHP_EOL;
+      if ($this->debugMode == 1) {
+        echo str_repeat("\t", $padding) . $message . PHP_EOL;
+      } elseif ($this->debugMode == 2) {
+        file_put_contents($this->logFile, str_repeat("\t", $padding) . $message . PHP_EOL, FILE_APPEND);
+      }
     }
   }
 

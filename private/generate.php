@@ -20,9 +20,10 @@ if (!$options['url'] || !$options['dest']) {
 $url = $options['url'];
 $curl = new Curl\Curl;
 $curl->setUserAgent('Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36');
+$curl->setOpt(CURLOPT_FOLLOWLOCATION, true);
 $limit = isset($options['limit']) ? $options['limit'] : 100;
 $dest = $options['dest'];
-$dest = dirname(__FILE__) . '/' . $options['dest'];
+//$dest = dirname(__FILE__) . '/' . $options['dest'];
 $debug = isset($options['debug']);
 $parser = new \PHPHtmlParser\Dom();
 $storage = new \Vedebel\Sitemap\SQLiteLinksStorage();

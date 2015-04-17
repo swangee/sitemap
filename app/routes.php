@@ -1,6 +1,6 @@
 <?php
 
-use Cocur\BackgroundProcess\BackgroundProcess;
+use Symfony\Component\Process\Process;
 
 $app = $container['app'];
 
@@ -27,49 +27,42 @@ $app->post('/start', function() use ($app, $container) {
       unset($_SESSION['csrfToken']);
       echo json_encode(array('error' => 'Incorrect CSRFToken'));
     } else {
-      if (!($sitemap = $container['redis']->get('sitemap'))) {
-        $sitemap = [];
-      } else {
-        $sitemap = json_decode($sitemap, true);
-      }
       $sitemap = [];
-      if (!isset($sitemap[md5($url)])) {
+      $notProccessing = true;
+      if ($notProccessing) {
         $xmlName = dirname(__FILE__) . '/tmp/' . md5($url) . '_' . time() . '.xml';
-        $parser = new \PHPHtmlParser\Dom();
-        $storage = new \Vedebel\Sitemap\SQLiteLinksStorage();
-        $generator = new Vedebel\Sitemap\Sitemap($parser, $storage, $url, ['limit' => $linksAmount]);
-        $generator->setLoader(new \Curl\Curl);
-        $generator->crawl();
-        $generator->saveXml($xmlName);
-        $sitemap[md5($url)] = [
+        $processString = dirname(__FILE__) . '/../private/generate.php --url ' . $url . ' --dest ' . $xmlName . ' --limit' . $linksAmount; // . ' --debug';
+        //echo $processString;exit;
+        $process = new Process('php ' . $processString);
+        $process->start();
+        $token = chr(mt_rand(97 ,122)) . substr(md5(time()), 1);
+        $sitemap = [
           'url' => $url,
-          'limit' => $linksAmount,
           'file' => $xmlName,
+          'limit' => $linksAmount,
+          'process' => $process->getPid(),
           'link' => '/tmp/' . md5($url) . '_' . time() . '.xml'
         ];
-        $container['redis']->set('sitemap', json_encode($sitemap));
+        $container['redis']->set('generation_' . $token, json_encode($sitemap));
       }
       
-      echo json_encode(array('url' => $url, 'email' => $email, 'linksAmount' => $linksAmount, 'id' => md5($url)));
+      echo json_encode(array('url' => $url, 'email' => $email, 'linksAmount' => $linksAmount, 'process' => $process->getPid(), 'processToken' => $token));
     }
 });
 
 $app->post('/processing', function() use ($app, $container) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
     session_start();
     session_write_close();
-    $url = $app->request->post('url');
-    $url_id = md5($url);
+    $processToken = $app->request->post('processToken');
     $csrfToken = base64_encode(openssl_random_pseudo_bytes(32));
-    $sitemap = json_decode($container['redis']->get('sitemap'), true);
-    $sitemap = $sitemap[$url_id];
+    $sitemap = json_decode($container['redis']->get('generation_' . $processToken), true);
+    $process = $sitemap['process'];
     if (file_exists($sitemap['file'])) {
       echo json_encode(array('finished' => 1, 'xml' => $sitemap['link']));
     } else {
       $parser = new \PHPHtmlParser\Dom();
       $storage = new \Vedebel\Sitemap\SQLiteLinksStorage();
-      $generator = new Vedebel\Sitemap\Sitemap($parser, $storage);
-      echo json_encode(array('finished' => 0, 'limit' => $sitemap['limit'], 'added' => $generator->linksAdded()));
+      $generator = new Vedebel\Sitemap\Sitemap($parser, $storage, $sitemap['url']);
+      echo json_encode(array('finished' => 0, 'limit' => $sitemap['limit'], 'process' => $process, 'added' => $generator->linksAdded()));
     }
 });
