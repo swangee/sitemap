@@ -155,7 +155,7 @@ class Sitemap
   {
     if (isset($this->scanned[$this->prepare($url)])) {
       continue;
-    } 
+    }
     if ($this->getUrlDepth($url) > $this->maxDepth) {
       return;
     }
@@ -200,7 +200,7 @@ class Sitemap
         return;
       } elseif (isset($this->scanned[$this->prepare($link)])) {
         continue;
-      } 
+      }
       $this->log('Total added/scanned: ' . $linksAdded . '/' . count($this->scanned), 1);
       $this->log('Page ' . $this->prepare($url) . ' scanned. Links amount: ' . count($links), 1);
       $this->crawlPages($link);
@@ -223,7 +223,7 @@ class Sitemap
 
   private function prepare($url)
   {
-    return $this->protocol . '://' . $this->host . '/' .  urlencode(trim(str_replace([$this->protocol . '://', $this->host], '', $url), '/'));
+    return $this->protocol . '://' . $this->host . '/' .  trim(str_replace([$this->protocol . '://', $this->host], '', $url), '/');
   }
 
   private function getUrlDepth($url)
@@ -249,7 +249,7 @@ class Sitemap
         $metaRobots = $content;
       } elseif ($name === 'canonical') {
         $canonical = $content;
-      } 
+      }
     }
 
     return [
@@ -276,12 +276,12 @@ class Sitemap
       $xml->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
       foreach ($links as $linkItem) {
         $xml->startElement('url');
-          $xml->writeElement ('loc', $linkItem['link']);
+          $xml->writeElement('loc', urldecode(urldecode($linkItem['link'])));
           if ($linkItem['modified']) {
-            $xml->writeElement ('lastmod', $linkItem['modified']);
+            $xml->writeElement('lastmod', $linkItem['modified']);
           }
-          $xml->writeElement ('changefreq', 'monthly');
-          $xml->writeElement ('priority', '0.5');
+          $xml->writeElement('changefreq', 'monthly');
+          $xml->writeElement('priority', '0.5');
         $xml->endElement();
       }
       $xml->endElement();

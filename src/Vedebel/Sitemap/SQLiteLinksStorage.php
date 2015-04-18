@@ -8,7 +8,8 @@ class SQLiteLinksStorage implements LinksStorage
   private $linksAmount = 0;
   private $loadLinksAttempt = false;
 
-  public function clean($siteUrl) {
+  public function clean($siteUrl)
+  {
     if (!$this->con) $this->connect($siteUrl);
     $sql = 'DELETE FROM `' . $this->table . '`';
     $this->query($sql);

@@ -9,9 +9,12 @@
     ],
     "minimum-stability": "dev",
     "require": {
+        "slim/slim": "2.*",
         "paquettg/php-html-parser": "dev-master",
         "codeception/codeception": "2.*",
         "maniaplanet/manialib-xml": "0.2.*@dev",
+        "pimple/pimple": "~3.0",
+        "predis/predis": "1.1.*@dev",
         "phpsec/phpsec":"0.6.*",
         "php-curl-class/php-curl-class": "dev-master",
         "symfony/process": "3.0.*@dev"
