@@ -1,5 +1,5 @@
 {
-    "name": "vedebel/uawebchallenge",
+    "name": "vedebel/sitemap",
     "description": "Sitemap generator",
     "authors": [
         {
@@ -24,7 +24,7 @@
     "repositories":[
         {
             "type": "git",
-            "url": "https://github.com/vedebel/uawebchallenge.git"
+            "url": "https://github.com/vedebel/sitemap.git"
         }
     ]
 }
