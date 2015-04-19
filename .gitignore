@@ -1,11 +1,8 @@
 .gitignore
 vendor
 .phpintel
-composer.lock
 sitemap.sublime-project
 tests/_output/*
 sftp-config.json
 *.db
 src/*/tmp/*
-app/tmp/*
-app/.htaccess
