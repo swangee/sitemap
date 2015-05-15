@@ -1,9 +1,10 @@
-.gitignore
+*.db
+.idea
 vendor
 .phpintel
-sitemap.sublime-project
+.gitignore
+src/*/tmp/*
 tests/_output/*
 sftp-config.json
-*.db
-src/*/tmp/*
-.idea
+sitemap.sublime-project
+src/Vedebel/Sitemap/sitemap.xml
