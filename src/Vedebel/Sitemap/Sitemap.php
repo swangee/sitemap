@@ -2,10 +2,9 @@
 namespace Vedebel\Sitemap;
 
 use \Curl\Curl;
-use \PHPHtmlParser\Dom;
-use \PHPHtmlParser\Exceptions\CurlException as CurException;
 use \stringEncode\Exception as StringException;
 use \Symfony\Component\Process\Process;
+use \Symfony\Component\DomCrawler\Crawler;
 
 class Sitemap
 {
@@ -40,7 +39,7 @@ class Sitemap
      * @param $url
      * @param null $options
      */
-    public function __construct(Dom $parser, LinksStorage $storage, $url = null, array $options = [])
+    public function __construct(Crawler $parser, LinksStorage $storage, $url = null, array $options = [])
     {
         $parsed = parse_url($url);
 
@@ -64,7 +63,7 @@ class Sitemap
             $this->fragment = $parsed['fragment'];
         }
 
-        $this->url = $url;
+        $this->url = trim($url, '/');
         $this->limit = (!empty($options['limit']) ? $options['limit'] : 1000);
         $this->errors = [];
         $this->parser = $parser;
@@ -186,7 +185,9 @@ class Sitemap
             return false;
         } elseif (!empty($this->uri()) && strpos($link, $this->uri()) === false) {
             return false;
-        } elseif (strpos($link, 'javascript:') !== false) {
+        } elseif (false !== strpos($link, 'javascript:') || false !== strpos($link, 'tel:') || false !== strpos($link, 'mailto:')) {
+            return false;
+        } elseif (!preg_match('@[\p{Cyrillic}\p{Latin}]+@i', $link)) {
             return false;
         }
         return true;
@@ -205,19 +206,16 @@ class Sitemap
      */
     private function getCorrectLinks()
     {
-        $links = (array) $this->parser->find('a');
-        $links = array_shift($links);
         $self = $this;
-        $links = array_filter($links, function ($link) use ($self) {
-            $rel = $link->getAttribute('rel');
+        $links = $this->parser->filter('a')->reduce(function($link, $i) use ($self)  {
+            $rel = $link->attr('rel');
             if (strtolower($rel) === 'nofollow') {
                 return false;
             }
-            return $self->checkLink($link->getAttribute('href'));
+            return $self->checkLink($link->attr('href'));
+        })->each(function($link) {
+            return $link->attr('href');
         });
-        $links = array_map(function ($link) {
-            return $link->getAttribute('href');
-        }, $links);
         return array_unique($links);
     }
 
@@ -298,12 +296,15 @@ class Sitemap
         if (strpos($url, $this->host) === false) {
             $url = $this->protocol . '://' . $this->host . '/' . ltrim($url, '/');
         }
+
         $this->loader->get($url);
+
         if ($this->loader->error) {
             $this->log('Error! Url: ' . $url . ' Status: ' . $this->loader->http_status_code);
             return false;
         }
-        $this->parser->load($this->loader->response);
+
+        $this->parser->addContent($this->loader->response);
         return true;
     }
 
@@ -328,22 +329,20 @@ class Sitemap
     private function getPageInfo()
     {
         $canonical = $metaRobots = $modified = $title = $description = null;
-        $meta = $this->parser->find('meta');
-
-        foreach ($meta as $element) {
-            $name = strtolower($element->getAttribute('name'));
-            $content = $element->getAttribute('content');
+        $meta = $this->parser->filter('meta')->each(function($node) use (&$metaRobots, &$canonical) {
+            $name = strtolower($node->attr('name'));
+            $content = $node->attr('content');
 
             if ($canonical && $metaRobots) {
                 break;
             }
 
-            if ($name === 'robots') {
+            if ('robots' === $name && is_null($metaRobots)) {
                 $metaRobots = $content;
-            } elseif ($name === 'canonical') {
+            } elseif ('canonical' === $name && is_null($canonical)) {
                 $canonical = $content;
             }
-        }
+        });
 
         return [
             'status' => 200,

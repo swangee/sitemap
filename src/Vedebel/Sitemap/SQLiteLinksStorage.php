@@ -64,7 +64,11 @@ class SQLiteLinksStorage implements LinksStorage
     $dbName = dirname(__FILE__) . '/tmp/' . md5($url) . '.db';
     $needInit = !file_exists($dbName);
 
-    $this->con = new \PDO('sqlite:' . $dbName);
+    try {
+      $this->con = new \PDO('sqlite:' . $dbName);
+    } catch (\PDOException $e) {
+      exit($e->getMessage() . " - $dbName\n");
+    }
 
     if (is_writable($dbName) === false) {
       throw new \RuntimeException('Database ' . $dbName . ' doesn`t exist or is not writable');

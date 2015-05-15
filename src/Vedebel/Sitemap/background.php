@@ -10,7 +10,7 @@ $options = getopt('', [
     'rescan::',
 ]);
 
-if (!$options['url'] || !$options['dest']) {
+if (empty($options['url']) || empty($options['dest'])) {
     exit('Url or File Name is not specified');
 }
 
@@ -27,7 +27,7 @@ $dest = $options['dest'];
 
 $debug = isset($options['debug']);
 
-$parser = new PHPHtmlParser\Dom();
+$parser = new Symfony\Component\DomCrawler\Crawler();
 
 $storage = new Vedebel\Sitemap\SQLiteLinksStorage();
 

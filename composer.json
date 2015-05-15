@@ -9,12 +9,12 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "paquettg/php-html-parser": "1.6.4",
         "codeception/codeception": "2.*",
         "maniaplanet/manialib-xml": "0.1.1",
         "phpsec/phpsec":"0.6.*",
         "php-curl-class/php-curl-class": "3.4.4",
-        "symfony/process": "3.0.*@dev"
+        "symfony/process": "3.0.*@dev",
+        "symfony/dom-crawler": "2.8.*@dev"
     },
     "autoload": {
         "psr-4": {
