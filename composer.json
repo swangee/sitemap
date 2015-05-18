@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Vedebel\\Sitemap\\": "src/Vedebel/Sitemap"
+            "Vedebel\\Sitemap\\": ""
         }
     },
     "repositories":[

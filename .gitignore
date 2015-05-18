@@ -1,6 +1,8 @@
 *.db
 .idea
+log.txt
 vendor
+test.php
 .phpintel
 .gitignore
 src/*/tmp/*
