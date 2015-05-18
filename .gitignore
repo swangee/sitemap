@@ -7,4 +7,4 @@ src/*/tmp/*
 tests/_output/*
 sftp-config.json
 sitemap.sublime-project
-src/Vedebel/Sitemap/sitemap.xml
+*sitemap.xml
