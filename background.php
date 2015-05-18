@@ -1,6 +1,8 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../vendor/autoload.php';
+require_once 'vendor/autoload.php';
+
+set_time_limit(60 * 60 * 3);
 
 $options = getopt('', [
     'url:',
