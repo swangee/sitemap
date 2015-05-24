@@ -1,5 +1,5 @@
 <?php
-namespace Vedebel\Sitemap;
+namespace vedebel\sitemap;
 
 use \Curl\Curl;
 use \stringEncode\Exception as StringException;
@@ -10,7 +10,6 @@ class Sitemap
 {
     private $url;
     private $options;
-    private $xmlName;
 
     private $uri;
     private $host;
@@ -37,9 +36,9 @@ class Sitemap
      * @param Dom $parser
      * @param LinksStorage $storage
      * @param $url
-     * @param null $options
+     * @param array $options
      */
-    public function __construct(Crawler $parser, LinksStorage $storage, $url = null, array $options = [])
+    public function __construct(Crawler $parser, LinksStorage $storage, $url, array $options = [])
     {
         $parsed = parse_url($url);
 
@@ -70,7 +69,6 @@ class Sitemap
         $this->storage = $storage;
         $this->scanned = [];
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
-        $this->xmlName = (!empty($options['xmlName']) ? $options['xmlName'] : dirname(__FILE__) . '/sitemap.xml');
 
         $this->debug = false;
         $this->logFile = dirname(__FILE__) . '/log.txt';
@@ -127,7 +125,7 @@ class Sitemap
     public function backgroundCrawl()
     {
         if (!$this->storage->hasScan($this->url)) {
-            $processString = dirname(__FILE__) . '/background.php --url ' . $this->url . ' --dest ' . $this->xmlName . ' --limit=' . $this->limit;
+            $processString = dirname(__FILE__) . '/background.php --url ' . $this->url . ' --dest ./sitemap.xml --limit=' . $this->limit;
             if ($this->debug) {
                 $processString .= ' --debug';
             }
@@ -153,10 +151,13 @@ class Sitemap
     public function saveXml($path)
     {
         try {
+            if (!file_exists($path)) {
+                touch($path);
+            }
             $file = new \SplFileObject($path, 'w+');
             $file->fwrite($this->generateXml());
         } catch (\RunTimeException $e) {
-
+            echo $e->getMessage();
         }
     }
 

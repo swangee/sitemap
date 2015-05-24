@@ -1,5 +1,5 @@
 <?php
-namespace Vedebel\Sitemap;
+namespace vedebel\sitemap;
 
 class SQLiteLinksStorage implements LinksStorage
 {

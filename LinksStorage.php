@@ -1,5 +1,5 @@
 <?php
-namespace Vedebel\Sitemap;
+namespace vedebel\sitemap;
 
 interface LinksStorage
 {

@@ -6,6 +6,7 @@ test.php
 .phpintel
 .gitignore
 src/*/tmp/*
+sitemap.xml
 tests/_output/*
 sftp-config.json
 sitemap.sublime-project
