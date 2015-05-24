@@ -70,7 +70,7 @@ class Sitemap
         $this->scanned = [];
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
 
-        $this->debug = false;
+        $this->debug = true;
         $this->logFile = dirname(__FILE__) . '/log.txt';
         if (false === file_put_contents($this->logFile, '')) {
             $this->log('Can\'t create log file');
@@ -120,104 +120,6 @@ class Sitemap
                 $this->errors[] = ['code' => $e->getCode(), 'message' => $e->getMessage()];
             }
         }
-    }
-
-    public function backgroundCrawl()
-    {
-        if (!$this->storage->hasScan($this->url)) {
-            $processString = dirname(__FILE__) . '/background.php --url ' . $this->url . ' --dest ./sitemap.xml --limit=' . $this->limit;
-            if ($this->debug) {
-                $processString .= ' --debug';
-            }
-            $process = new Process('php ' . $processString);
-            try {
-                $process->start();
-            } catch (\RuntimeException $e) {
-                $this->log($e->getMessage());
-            }
-            return $process->getPid();
-        }
-    }
-
-    public function rescan()
-    {
-        $this->storage->clean($this->url);
-        $this->crawl();
-    }
-
-    /**
-     * @param $path
-     */
-    public function saveXml($path)
-    {
-        try {
-            if (!file_exists($path)) {
-                touch($path);
-            }
-            $file = new \SplFileObject($path, 'w+');
-            $file->fwrite($this->generateXml());
-        } catch (\RunTimeException $e) {
-            echo $e->getMessage();
-        }
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLinks()
-    {
-        return $this->storage->loadScan($this->url);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function linksAdded()
-    {
-        return $this->storage->countLinks($this->url);
-    }
-
-    /**
-     * @param $link
-     */
-    public function checkLink($link)
-    {
-        if (preg_match('@^https?://@', $link) && strpos($link, $this->host) === false) {
-            return false;
-        } elseif (!empty($this->uri()) && strpos($link, $this->uri()) === false) {
-            return false;
-        } elseif (false !== strpos($link, 'javascript:') || false !== strpos($link, 'tel:') || false !== strpos($link, 'mailto:')) {
-            return false;
-        } elseif (!preg_match('@[\p{Cyrillic}\p{Latin}]+@i', $link)) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * @return mixed
-     */
-    private function uri()
-    {
-        return $this->path . (($this->query) ? ('?' . $this->query) : '') . (($this->fragment) ? ('#' . $this->fragment) : '');
-    }
-
-    /**
-     * @return mixed
-     */
-    private function getCorrectLinks()
-    {
-        $self = $this;
-        $links = $this->parser->filter('a')->reduce(function($link, $i) use ($self)  {
-            $rel = $link->attr('rel');
-            if (strtolower($rel) === 'nofollow') {
-                return false;
-            }
-            return $self->checkLink($link->attr('href'));
-        })->each(function($link) {
-            return $link->attr('href');
-        });
-        return array_unique($links);
     }
 
     /**
@@ -287,6 +189,104 @@ class Sitemap
             $this->log('Page ' . $this->prepare($url) . ' scanned. Links amount: ' . count($links), 1);
             $this->crawlPages($link);
         }
+    }
+
+    public function backgroundCrawl()
+    {
+        if (!$this->storage->hasScan($this->url)) {
+            $processString = dirname(__FILE__) . '/background.php --url ' . $this->url . ' --dest ./sitemap.xml --limit=' . $this->limit;
+            if ($this->debug) {
+                $processString .= ' --debug';
+            }
+            $process = new Process('php ' . $processString);
+            try {
+                $process->start();
+            } catch (\RuntimeException $e) {
+                $this->log($e->getMessage());
+            }
+            return $process->getPid();
+        }
+    }
+
+    public function rescan()
+    {
+        $this->storage->clean($this->url);
+        $this->crawl();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLinks()
+    {
+        return $this->storage->loadScan($this->url);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function linksAdded()
+    {
+        return $this->storage->countLinks($this->url);
+    }
+
+    /**
+     * @param $link
+     */
+    public function checkLink($link)
+    {
+        if (preg_match('@^https?://@', $link) && strpos($link, $this->host) === false) {
+            return false;
+        } elseif (!empty($this->uri()) && strpos($link, $this->uri()) === false) {
+            return false;
+        } elseif (false !== strpos($link, 'javascript:') || false !== strpos($link, 'tel:') || false !== strpos($link, 'mailto:')) {
+            return false;
+        } elseif (!preg_match('@[\p{Cyrillic}\p{Latin}]+@i', $link)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param $path
+     */
+    public function saveXml($path)
+    {
+        try {
+            if (!file_exists($path)) {
+                touch($path);
+            }
+            $file = new \SplFileObject($path, 'w+');
+            $file->fwrite($this->generateXml());
+        } catch (\RunTimeException $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    private function uri()
+    {
+        return $this->path . (($this->query) ? ('?' . $this->query) : '') . (($this->fragment) ? ('#' . $this->fragment) : '');
+    }
+
+    /**
+     * @return mixed
+     */
+    private function getCorrectLinks()
+    {
+        $self = $this;
+        $links = $this->parser->filter('a')->reduce(function($link, $i) use ($self)  {
+            $rel = $link->attr('rel');
+            if (strtolower($rel) === 'nofollow') {
+                return false;
+            }
+            return $self->checkLink($link->attr('href'));
+        })->each(function($link) {
+            return $link->attr('href');
+        });
+        return array_unique($links);
     }
 
     /**

@@ -5,8 +5,16 @@ class SQLiteLinksStorage implements LinksStorage
 {
   private $con;
   private $table = 'links';
+  private $dbName = null;
   private $linksAmount = 0;
   private $loadLinksAttempt = false;
+
+  public function __destruct()
+  {
+    if (file_exists($this->dbName)) {
+      unlink($this->dbName);
+    }
+  }
 
   public function clean($siteUrl)
   {
@@ -61,7 +69,7 @@ class SQLiteLinksStorage implements LinksStorage
 
   private function connect($url)
   {
-    $dbName = dirname(__FILE__) . '/tmp/' . md5($url) . '.db';
+    $this->dbName = dirname(__FILE__) . '/tmp/' . md5($url) . '.db';
     $needInit = !file_exists($dbName);
 
     try {
