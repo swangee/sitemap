@@ -72,6 +72,10 @@ class SQLiteLinksStorage implements LinksStorage
     $this->dbName = dirname(__FILE__) . '/tmp/' . md5($url) . '.db';
     $needInit = !file_exists($dbName);
 
+    if (!file_exists(dirname(__FILE__) . '/tmp/')) {
+      mkdir(dirname(__FILE__) . '/tmp/');
+    }
+
     try {
       $this->con = new \PDO('sqlite:' . $dbName);
     } catch (\PDOException $e) {
