@@ -70,20 +70,20 @@ class SQLiteLinksStorage implements LinksStorage
   private function connect($url)
   {
     $this->dbName = dirname(__FILE__) . '/tmp/' . md5($url) . '.db';
-    $needInit = !file_exists($dbName);
+    $needInit = !file_exists($this->dbName);
 
     if (!file_exists(dirname(__FILE__) . '/tmp/')) {
       mkdir(dirname(__FILE__) . '/tmp/');
     }
 
     try {
-      $this->con = new \PDO('sqlite:' . $dbName);
+      $this->con = new \PDO('sqlite:' . $this->dbName);
     } catch (\PDOException $e) {
       exit($e->getMessage() . " - $dbName\n");
     }
 
-    if (is_writable($dbName) === false) {
-      throw new \RuntimeException('Database ' . $dbName . ' doesn`t exist or is not writable');
+    if (is_writable($this->dbName) === false) {
+      throw new \RuntimeException('Database ' . $this->dbName . ' doesn`t exist or is not writable');
     }
 
     if ($needInit) {
