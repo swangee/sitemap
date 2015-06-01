@@ -33,7 +33,7 @@ class Sitemap
     private $storage;
 
     /**
-     * @param Dom $parser
+     * @param Crawler $parser
      * @param LinksStorage $storage
      * @param $url
      * @param array $options
@@ -71,11 +71,12 @@ class Sitemap
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
 
         $this->debug = true;
+        $this->debugMode = (!empty($options['debugMode']) ? $options['debugMode'] : 2);
+
         $this->logFile = dirname(__FILE__) . '/log.txt';
         if (false === file_put_contents($this->logFile, '')) {
             $this->log('Can\'t create log file');
         }
-        $this->debugMode = (!empty($options['debugMode']) ? $options['debugMode'] : 2);
     }
 
     /**
@@ -114,6 +115,9 @@ class Sitemap
     {
         if (!$this->storage->hasScan($this->url)) {
             $this->log('Start crawling site');
+            if (empty($this->url)) {
+                throw new \RuntimeException('Root Url cannot be empty');
+            }
             try {
                 $this->crawlPages($this->url);
             } catch (StringException $e) {
@@ -137,8 +141,9 @@ class Sitemap
      */
     private function crawlPages($url)
     {
+        usleep(500000);
         if (isset($this->scanned[$this->prepare($url)])) {
-            continue;
+            return;
         }
         if ($this->getUrlDepth($url) > $this->maxDepth) {
             return;
@@ -168,7 +173,7 @@ class Sitemap
         if (strpos($pageInfo['metaRobots'], 'noindex') !== false) {
             return;
         }
-        $this->storage->addLink($this->url, $preparedUrl, $this->getPageInfo());
+        $this->storage->addLink($this->url, $preparedUrl, $pageInfo);
         $this->log('Link ' . $this->prepare($url) . ' added', 1);
         if (count($this->scanned) >= $this->limit) {
             return;
@@ -279,10 +284,14 @@ class Sitemap
         $self = $this;
         $links = $this->parser->filter('a')->reduce(function($link, $i) use ($self)  {
             $rel = $link->attr('rel');
+            $href = $link->attr('href');
             if (strtolower($rel) === 'nofollow') {
                 return false;
             }
-            return $self->checkLink($link->attr('href'));
+            if (isset($self->scanned[$self->prepare($href)])) {
+                return false;
+            }
+            return $self->checkLink($href);
         })->each(function($link) {
             return $link->attr('href');
         });
@@ -303,9 +312,12 @@ class Sitemap
         if ($this->loader->error) {
             $this->log('Error! Url: ' . $url . ' Status: ' . $this->loader->http_status_code);
             return false;
+        } elseif (200 !== (int) $this->loader->http_status_code) {
+            $this->log('Error! Url: ' . $url . ' Status: ' . $this->loader->http_status_code);
+            return false;
         }
-
-        $this->parser->addContent($this->loader->response);
+        $this->parser->clear();
+        $this->parser->addHtmlContent($this->loader->response);
         return true;
     }
 
@@ -395,6 +407,7 @@ class Sitemap
             if ($this->debugMode == 1) {
                 echo str_repeat("\t", $padding) . $message . PHP_EOL;
             } elseif ($this->debugMode == 2) {
+                echo str_repeat("\t", $padding) . $message . PHP_EOL;
                 file_put_contents($this->logFile, str_repeat("\t", $padding) . $message . PHP_EOL, FILE_APPEND);
             }
         }

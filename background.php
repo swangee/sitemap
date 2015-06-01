@@ -25,15 +25,15 @@ $curl->setOpt(CURLOPT_FOLLOWLOCATION, true);
 $limit = isset($options['limit']) ? $options['limit'] : 100;
 
 $dest = $options['dest'];
-//$dest = dirname(__FILE__) . '/' . $options['dest'];
+$dest = dirname(__FILE__) . '/' . $options['dest'];
 
 $debug = isset($options['debug']);
 
 $parser = new Symfony\Component\DomCrawler\Crawler();
 
-$storage = new Vedebel\Sitemap\SQLiteLinksStorage();
+$storage = new vedebel\sitemap\SQLiteLinksStorage();
 
-$generator = new Vedebel\Sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit]);
+$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit]);
 $generator->debug($debug);
 $generator->setLoader($curl);
 if (isset($options['rescan'])) {
