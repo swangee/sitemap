@@ -5,9 +5,6 @@ vendor
 test.php
 .phpintel
 .gitignore
-src/*/tmp/*
+composer.lock
 sitemap.xml
 tests/_output/*
-sftp-config.json
-sitemap.sublime-project
-src/Vedebel/Sitemap/sitemap.xml

@@ -7,14 +7,11 @@
             "email": "hollowj33@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "codeception/codeception": "2.*",
-        "maniaplanet/manialib-xml": "0.1.1",
-        "phpsec/phpsec":"0.6.*",
-        "php-curl-class/php-curl-class": "3.4.4",
-        "symfony/process": "3.0.*@dev",
-        "symfony/dom-crawler": "2.8.*@dev"
+        "guzzlehttp/guzzle": "~6.0",
+        "symfony/dom-crawler": "2.7.3"
     },
     "autoload": {
         "psr-4": {

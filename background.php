@@ -2,8 +2,9 @@
 
 require_once 'vendor/autoload.php';
 
-set_time_limit(60 * 60 * 3);
+$start = microtime(true);
 
+echo "====================Script started at " . date("H:i:s") . "============================\n\n";
 $options = getopt('', [
     'url:',
     'dest:',
@@ -18,27 +19,28 @@ if (empty($options['url']) || empty($options['dest'])) {
 
 $url = $options['url'];
 
-$curl = new Curl\Curl;
-$curl->setUserAgent('Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36');
-$curl->setOpt(CURLOPT_FOLLOWLOCATION, true);
-
 $limit = isset($options['limit']) ? $options['limit'] : 100;
 
 $dest = $options['dest'];
-$dest = dirname(__FILE__) . '/' . $options['dest'];
+//$dest = dirname(__FILE__) . '/' . $options['dest'];
 
 $debug = isset($options['debug']);
 
 $parser = new Symfony\Component\DomCrawler\Crawler();
 
-$storage = new vedebel\sitemap\SQLiteLinksStorage();
+$storage = new vedebel\sitemap\BasicLinksStorage();
 
-$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit]);
+$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit, 'debug' => 1]);
 $generator->debug($debug);
-$generator->setLoader($curl);
+$generator->setLoader(new GuzzleHttp\Client());
 if (isset($options['rescan'])) {
     $generator->rescan();
 } else {
     $generator->crawl();
 }
 $generator->saveXml($dest);
+
+echo "====================Script ended at " . date("H:i:s") . "============================\n";
+echo "- Execution time: " . round((microtime(true) - $start) / 60, 2) . " minutes\n";
+echo "- Url: {$url}\n";
+echo "- Limit: {$limit}\n";
