@@ -30,9 +30,12 @@ $parser = new Symfony\Component\DomCrawler\Crawler();
 
 $storage = new vedebel\sitemap\BasicLinksStorage();
 
-$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit, 'debug' => 1]);
-$generator->debug($debug);
+$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit, 'debug' => 0]);
 $generator->setLoader(new GuzzleHttp\Client());
+$generator->setCallback(function(array $scanned, array $added, array $queue) {
+    echo "This is message form callback.\nScanned: "
+        . count($scanned) . "\nAdded: " . count($added) . "\nQueue: " . count($queue) . "\n";
+});
 if (isset($options['rescan'])) {
     $generator->rescan();
 } else {

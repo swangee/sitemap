@@ -46,6 +46,16 @@ class Sitemap
     private $queue;
 
     /**
+     * @var callable
+     */
+    private $callback;
+
+    /**
+     * @var int
+     */
+    private $callbackFrequency;
+
+    /**
      * @var string
      */
     private $logFile;
@@ -96,6 +106,11 @@ class Sitemap
     private $timeout;
 
     /**
+     * @var int
+     */
+    private $sleepTimeout;
+
+    /**
      * @var Crawler
      */
     private $parser;
@@ -144,6 +159,7 @@ class Sitemap
         $this->queue = [];
         $this->limit = (!empty($options['limit']) ? (int) $options['limit'] : 1000);
         $this->timeout = (!empty($options['timeout']) ? (int) $options['timeout'] : 5);
+        $this->sleepTimeout = 0;
         $this->errors = [];
         $this->parser = $parser;
         $this->storage = $storage;
@@ -187,6 +203,18 @@ class Sitemap
     }
 
     /**
+     * @param callable $callback
+     * @param int $frequency
+     */
+    public function setCallback($callback, $frequency = 10)
+    {
+        if (is_callable($callback)) {
+            $this->callback = $callback;
+            $this->callbackFrequency = $frequency;
+        }
+    }
+
+    /**
      * @param $mode
      */
     public function debug($mode)
@@ -208,7 +236,10 @@ class Sitemap
                 $this->queue[] = $this->prepare($this->url);
                 do {
                     $this->crawlPages();
+                    $this->executeCallback();
                 } while ($this->queue);
+
+                $this->executeCallback(true);
             } catch (\Exception $e) {
                 $this->errors[] = ['code' => $e->getCode(), 'message' => $e->getMessage()];
             }
@@ -287,7 +318,6 @@ class Sitemap
         }
         $this->log("Page {$url} scanned. Links amount: " . count($links), 1);
         $this->log("Total added/scanned/queue: {$linksAmount}/" . count($this->scanned) . "/" . count($this->queue) . "\n", 1);
-        $this->crawlPages();
     }
 
     /**
@@ -406,6 +436,10 @@ class Sitemap
      */
     private function loadPage($url)
     {
+        if ($this->sleepTimeout) {
+            sleep($this->sleepTimeout);
+        }
+
         if (false === strpos($url, $this->host)) {
             $url = $this->protocol . '://' . $this->host . '/' . ltrim($url, '/');
         }
@@ -432,11 +466,28 @@ class Sitemap
             $this->parser->clear();
             $this->parser->addHtmlContent($response->getBody());
         } catch (RequestException $e) {
+            if (429 === (int) $e->getCode()) {
+                $this->sleepTimeout += 0.5;
+            }
             $this->log('Error! Url: ' . $url . '. ' . $e->getMessage());
             return false;
         }
 
         return true;
+    }
+
+    private function executeCallback($force = false)
+    {
+        if ($this->scanned && $this->callback && $this->callbackFrequency) {
+            if (0 === (count($this->scanned) % $this->callbackFrequency) || $force) {
+                call_user_func(
+                    $this->callback,
+                    $this->scanned,
+                    $this->storage->loadScan($this->url),
+                    $this->queue
+                );
+            }
+        }
     }
 
     /**
