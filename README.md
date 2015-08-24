@@ -19,5 +19,5 @@ If you want to monitor process while site is crawling, you can add callback, wic
 $generator->setCallback(function(array $scanned, array $added, array $queue) {
     echo "This is message form callback.\nScanned: "
         . count($scanned) . "\nAdded: " . count($added) . "\nQueue: " . count($queue) . "\n";
-});
+}, 10);
 ```
