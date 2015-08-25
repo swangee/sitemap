@@ -2,6 +2,9 @@
 
 require_once 'vendor/autoload.php';
 
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
 $start = microtime(true);
 
 echo "====================Script started at " . date("H:i:s") . "============================\n\n";

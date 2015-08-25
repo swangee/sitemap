@@ -106,6 +106,11 @@ class Sitemap
     private $timeout;
 
     /**
+     * @var string
+     */
+    private $userAgent;
+
+    /**
      * @var int
      */
     private $sleepTimeout;
@@ -167,6 +172,7 @@ class Sitemap
         $this->lastUrlData = [];
         $this->excludeExtension = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"];
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
+        $this->userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36";
 
         $this->debug = (!empty($options['debug']) ? (bool) $options['debug'] : false);
         $this->debugMode = (!empty($options['debugMode']) ? (int) $options['debugMode'] : 2);
@@ -200,6 +206,14 @@ class Sitemap
     public function setLimit($limit)
     {
         $this->limit = $limit;
+    }
+
+    /**
+     * @param string $useAgent
+     */
+    public function setUserAgent($useAgent)
+    {
+        $this->userAgent = $useAgent;
     }
 
     /**
@@ -445,7 +459,10 @@ class Sitemap
         }
 
         try {
-            $response = $this->client->get($url, ["timeout" => $this->timeout]);
+            $headers = [
+                "User-Agent" => $this->userAgent
+            ];
+            $response = $this->client->get($url, ["timeout" => $this->timeout, "headers" => $headers]);
 
             if ($lastModified = $response->getHeaderLine("Last-Modified")) {
                 $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified)->format('Y-m-d\TH:i:sP');
