@@ -130,6 +130,8 @@ class Sitemap
      */
     private $excludeExtension;
 
+    private $excludePatterns;
+
     /**
      * @param Crawler $parser
      * @param LinksStorage $storage
@@ -170,6 +172,7 @@ class Sitemap
         $this->storage = $storage;
         $this->scanned = [];
         $this->lastUrlData = [];
+        $this->excludePatterns = [];
         $this->excludeExtension = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"];
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
         $this->userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36";
@@ -246,6 +249,7 @@ class Sitemap
             if (empty($this->url)) {
                 throw new \RuntimeException('Root Url cannot be empty');
             }
+            $this->loadRobots();
             try {
                 $this->queue[] = $this->prepare($this->url);
                 do {
@@ -395,6 +399,12 @@ class Sitemap
             return false;
         } elseif (!preg_match('@[\p{Cyrillic}\p{Latin}]+@i', $link)) {
             return false;
+        } else {
+            foreach ($this->excludePatterns as $pattern) {
+                if (preg_match('@^' . $pattern . '$@', $link)) {
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -561,6 +571,35 @@ class Sitemap
         ];
     }
 
+    private function loadRobots()
+    {
+        try {
+            $response = $this->client->get($this->url . '/robots.txt', [
+                "headers" => [
+                    "User-Agent" => $this->userAgent
+                ]
+            ]);
+
+            $robots = $response->getBody();
+            preg_match('@user-agent:\s?\*(.+)(user-agent|$).*@isU', $robots, $matches);
+
+            if (isset($matches[1])) {
+                $commonRules = explode("\n", trim($matches[1]));
+                foreach ($commonRules as $rule) {
+                    if (empty($rule) || false === strpos($rule, ":")) {
+                        continue;
+                    }
+                    $rule = explode(":", $rule);
+                    if (preg_match("@^disallow$@i", $rule[0])) {
+                        $regex = trim(str_replace("*", ".*", $rule[1]));
+                        $this->excludePatterns[] = $regex;
+                    }
+                }
+            }
+        } catch (RequestException $e) {
+        }
+    }
+
     /**
      * @return mixed
      */
@@ -595,11 +634,18 @@ class Sitemap
     private function log($message, $padding = 0)
     {
         if ($this->debug) {
+            if (is_array($message)) {
+                $message = print_r($message, true);
+            } elseif (is_object($message)) {
+                $message = var_export($message);
+            }
             if (1 == $this->debugMode) {
                 echo str_repeat("\t", $padding) . $message . PHP_EOL;
             } elseif (2 === $this->debugMode) {
                 echo str_repeat("\t", $padding) . $message . PHP_EOL;
-                file_put_contents($this->logFile, str_repeat("\t", $padding) . $message . PHP_EOL, FILE_APPEND);
+                if (is_writable($this->logFile)) {
+                    file_put_contents($this->logFile, str_repeat("\t", $padding) . $message . PHP_EOL, FILE_APPEND);
+                }
             }
         }
     }
