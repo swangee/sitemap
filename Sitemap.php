@@ -142,6 +142,7 @@ class Sitemap
      */
     public function __construct(Crawler $parser, LinksStorage $storage, $url, array $options = [])
     {
+        $url = str_replace('www.', '', $url);
         $parsed = parse_url($url);
 
         if (isset($parsed['scheme'])) {
@@ -149,7 +150,7 @@ class Sitemap
         }
 
         if (isset($parsed['host'])) {
-            $this->host = str_replace('www', '', $parsed['host']);
+            $this->host = $parsed['host'];
         }
 
         if (isset($parsed['path'])) {
@@ -647,6 +648,7 @@ class Sitemap
                     $rule = explode(":", $rule);
                     if (preg_match("@^disallow$@i", $rule[0])) {
                         $regex = trim(str_replace("*", ".*", $rule[1]));
+                        $regex = str_replace("?", '\?', $regex);
                         $this->excludePatterns[] = $regex;
                     }
                 }
