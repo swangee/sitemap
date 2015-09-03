@@ -132,6 +132,8 @@ class Sitemap
 
     private $excludePatterns;
 
+    private $fileLinksLimit;
+
     /**
      * @param Crawler $parser
      * @param LinksStorage $storage
@@ -147,7 +149,7 @@ class Sitemap
         }
 
         if (isset($parsed['host'])) {
-            $this->host = $parsed['host'];
+            $this->host = str_replace('www', '', $parsed['host']);
         }
 
         if (isset($parsed['path'])) {
@@ -173,6 +175,7 @@ class Sitemap
         $this->scanned = [];
         $this->lastUrlData = [];
         $this->excludePatterns = [];
+        $this->fileLinksLimit = 50000;
         $this->excludeExtension = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"];
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
         $this->userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36";
@@ -180,8 +183,8 @@ class Sitemap
         $this->debug = (!empty($options['debug']) ? (bool) $options['debug'] : false);
         $this->debugMode = (!empty($options['debugMode']) ? (int) $options['debugMode'] : 2);
 
-        $this->logFile = dirname(__FILE__) . '/log.txt';
-        if (2 === $this->debugMode && false === file_put_contents($this->logFile, '')) {
+        $this->logFile = (!empty($options['logDir']) ? rtrim($options['logDir'], '/') : dirname(__FILE__)) . '/log.txt';
+        if (2 === $this->debugMode && !is_writable($this->logFile)) {
             $this->debugMode = 1;
             $this->log('Can\'t create log file');
         }
@@ -391,17 +394,21 @@ class Sitemap
      */
     public function checkLink($link)
     {
-        if (preg_match('@^https?://@', $link) && strpos($link, $this->host) === false) {
+        if (preg_match('@^https?://@', $link) && false === strpos($link, $this->host)) {
+            $this->log("Link {$link} has incorrect host. Needed {$this->host}", 4);
             return false;
-        } elseif (!empty($this->uri()) && strpos($link, $this->uri()) === false) {
+        } elseif (!empty($this->uri()) && false === strpos($link, $this->uri())) {
+            $this->log("Link {$link} is doesn't have {$this->uri()} part", 4);
             return false;
         } elseif (false !== strpos($link, 'javascript:') || false !== strpos($link, 'tel:') || false !== strpos($link, 'mailto:')) {
             return false;
         } elseif (!preg_match('@[\p{Cyrillic}\p{Latin}]+@i', $link)) {
+            $this->log("Link {$link} has bad symbols", 4);
             return false;
         } else {
             foreach ($this->excludePatterns as $pattern) {
                 if (preg_match('@^' . $pattern . '$@', $link)) {
+                    $this->log("Link {$link} is incorrect according to robots rule {$pattern}", 4);
                     return false;
                 }
             }
@@ -411,17 +418,60 @@ class Sitemap
 
     /**
      * @param string $path
+     * @return array|boolean
      */
     public function saveXml($path)
     {
         try {
-            if (!file_exists($path)) {
-                touch($path);
+            if (!is_dir($path)) {
+                throw new \InvalidArgumentException($path . " is not a directory");
             }
-            $file = new \SplFileObject($path, 'w+');
-            $file->fwrite($this->generateXml());
+
+            $links = $this->storage->loadScan($this->url);
+            $chunks = array_chunk($links, $this->fileLinksLimit);
+
+            $sitemap = [];
+            $sitemapPath = null;
+
+            foreach ($chunks as $key => $chunk) {
+                if (1 === count($chunks)) {
+                    $sitemapPath = $path . "/sitemap.xml";
+                } else {
+                    $index = $key + 1;
+                    $sitemapPath = $path . "/sitemap_{$index}.xml";
+                }
+
+                if (!file_exists($sitemapPath)) {
+                    if (!touch($sitemapPath)) {
+                        throw new \RuntimeException("Can't create file {$sitemapPath}");
+                    }
+                } elseif (!is_writable($sitemapPath)) {
+                    throw new \RuntimeException("Do not have permissions to create " . $sitemapPath);
+                }
+
+                $file = new \SplFileObject($sitemapPath, 'w+');
+                $file->fwrite($this->generateXml($chunk));
+
+                $sitemap[] = $sitemapPath;
+            }
+
+            if (1 < count($sitemap)) {
+                $sitemaps = count($sitemap);
+                $sitemapsIndexPath = $path . '/sitemaps_index.xml';
+                $sitemapsIndex = $this->generateSitemapsIndex($sitemaps);
+
+                $file = new \SplFileObject($sitemapsIndexPath, 'w+');
+                $file->fwrite($sitemapsIndex);
+            }
+
+            return (isset($sitemapsIndexPath) ?
+                ['index' => $sitemapsIndexPath, 'sitemaps' => $sitemap] :
+                ['sitemap' => $sitemapPath]);
+
         } catch (\RunTimeException $e) {
             echo $e->getMessage();
+
+            return false;
         }
     }
 
@@ -430,7 +480,9 @@ class Sitemap
      */
     private function uri()
     {
-        return $this->path . (($this->query) ? ('?' . $this->query) : '') . (($this->fragment) ? ('#' . $this->fragment) : '');
+        return $this->path .
+            (($this->query) ? ('?' . $this->query) : '') .
+            (($this->fragment) ? ('#' . $this->fragment) : '');
     }
 
     /**
@@ -523,6 +575,9 @@ class Sitemap
      */
     private function prepare($url)
     {
+        if (0 === strpos($url, '.')) {
+            $url = substr($url, 1);
+        }
         return $this->protocol . '://' . $this->host . '/' . ltrim(str_replace([$this->protocol . '://', $this->host], '', $url), '/');
     }
 
@@ -601,11 +656,11 @@ class Sitemap
     }
 
     /**
+     * @param array $links
      * @return mixed
      */
-    private function generateXml()
+    private function generateXml(array $links)
     {
-        $links = $this->getLinks();
         $xml = new \XMLWriter();
         $xml->openMemory();
         $xml->setIndent(true);
@@ -620,6 +675,26 @@ class Sitemap
             }
             $xml->writeElement('changefreq', 'monthly');
             $xml->writeElement('priority', '0.5');
+            $xml->endElement();
+        }
+        $xml->endElement();
+        $xml->endDocument();
+        return $xml->outputMemory(true);
+    }
+
+    private function generateSitemapsIndex($amount)
+    {
+        $xml = new \XMLWriter();
+        $xml->openMemory();
+        $xml->setIndent(true);
+        $xml->startDocument();
+        $xml->startElement('sitemapindex');
+        $xml->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        while ($amount--) {
+            $index = $amount + 1;
+            $xml->startElement('sitemap');
+            $xml->writeElement('loc', $this->host . "/sitemap_{$index}.xml");
+            $xml->writeElement('lastmod', date('Y-m-d\TH:i:sP'));
             $xml->endElement();
         }
         $xml->endElement();
