@@ -1,8 +1,8 @@
 *.db
+tmp
 .idea
 log.txt
 vendor
-test.php
 .phpintel
 .gitignore
 composer.lock

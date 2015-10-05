@@ -11,7 +11,9 @@
     "require": {
         "codeception/codeception": "2.*",
         "guzzlehttp/guzzle": "~6.0",
-        "symfony/dom-crawler": "2.7.3"
+        "symfony/dom-crawler": "2.7.3",
+        "imangazaliev/didom": "^1.3",
+        "mashape/unirest-php": "^2.6"
     },
     "autoload": {
         "psr-4": {

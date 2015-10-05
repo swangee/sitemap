@@ -1,5 +1,5 @@
 <?php
-namespace vedebel\sitemap;
+namespace vedebel\sitemap\storages;
 
 use PDO;
 use PDOStatement;

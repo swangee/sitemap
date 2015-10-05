@@ -1,5 +1,7 @@
 <?php
 
+use vedebel\sitemap\crawlers\DiDomCrawler;
+
 require_once 'vendor/autoload.php';
 
 error_reporting(E_ALL);
@@ -11,6 +13,7 @@ echo "====================Script started at " . date("H:i:s") . "===============
 $options = getopt('', [
     'url:',
     'dest:',
+    'async::',
     'limit::',
     'debug::',
     'rescan::',
@@ -23,17 +26,19 @@ if (empty($options['url']) || empty($options['dest'])) {
 $url = $options['url'];
 
 $limit = isset($options['limit']) ? $options['limit'] : 100;
+$threadsLimit = isset($options['threadsLimit']) ? $options['threadsLimit'] : null;
 
 $dest = $options['dest'];
-//$dest = dirname(__FILE__) . '/' . $options['dest'];
 
 $debug = isset($options['debug']);
 
-$parser = new Symfony\Component\DomCrawler\Crawler();
+$parser = new DiDomCrawler(new \DiDom\Document());
 
-$storage = new vedebel\sitemap\BasicLinksStorage();
+$storage = new vedebel\sitemap\storages\BasicLinksStorage();
 
-$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, ['limit' => $limit, 'debug' => 1]);
+$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, [
+    'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit
+]);
 $generator->setLoader(new GuzzleHttp\Client());
 $generator->setCallback(function(array $scanned, array $added, array $queue) {
     echo "This is message form callback.\nScanned: "
@@ -48,5 +53,6 @@ $generator->saveXml($dest);
 
 echo "====================Script ended at " . date("H:i:s") . "============================\n";
 echo "- Execution time: " . round((microtime(true) - $start) / 60, 2) . " minutes\n";
+echo "- Peak memory usage: " . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . " MB\n";
 echo "- Url: {$url}\n";
 echo "- Limit: {$limit}\n";

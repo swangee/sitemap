@@ -1,9 +1,16 @@
 <?php
 namespace vedebel\sitemap;
 
+use Codeception\Exception\ConnectionException;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
-use Symfony\Component\DomCrawler\Crawler;
+use GuzzleHttp\Exception\ServerException;
+use GuzzleHttp\Promise\PromiseInterface;
+use Psr\Http\Message\ResponseInterface;
+use vedebel\sitemap\crawlers\CrawlerInterface;
+use vedebel\sitemap\storages\LinksStorage;
 
 /**
  * Class Sitemap
@@ -15,6 +22,11 @@ class Sitemap
      * @var string
      */
     private $url;
+
+    /**
+     * @var bool
+     */
+    private $async;
 
     /**
      * @var string
@@ -106,6 +118,11 @@ class Sitemap
     private $timeout;
 
     /**
+     * @var int
+     */
+    private $threadsLimit;
+
+    /**
      * @var string
      */
     private $userAgent;
@@ -116,7 +133,7 @@ class Sitemap
     private $sleepTimeout;
 
     /**
-     * @var Crawler
+     * @var CrawlerInterface
      */
     private $parser;
 
@@ -130,17 +147,23 @@ class Sitemap
      */
     private $excludeExtension;
 
+    /**
+     * @var array
+     */
     private $excludePatterns;
 
+    /**
+     * @var int
+     */
     private $fileLinksLimit;
 
     /**
-     * @param Crawler $parser
+     * @param CrawlerInterface $parser
      * @param LinksStorage $storage
      * @param $url
      * @param array $options
      */
-    public function __construct(Crawler $parser, LinksStorage $storage, $url, array $options = [])
+    public function __construct(CrawlerInterface $parser, LinksStorage $storage, $url, array $options = [])
     {
         $url = str_replace('www.', '', $url);
         $parsed = parse_url($url);
@@ -167,8 +190,10 @@ class Sitemap
 
         $this->url = trim($url, '/');
         $this->queue = [];
+        $this->async = (!empty($options['async']) ? (bool) $options['async'] : false);
         $this->limit = (!empty($options['limit']) ? (int) $options['limit'] : 1000);
-        $this->timeout = (!empty($options['timeout']) ? (int) $options['timeout'] : 5);
+        $this->timeout = (!empty($options['timeout']) ? (int) $options['timeout'] : 20);
+        $this->threadsLimit = (!empty($options['threadsLimit']) ? (int) $options['threadsLimit'] : 100);
         $this->sleepTimeout = 0;
         $this->errors = [];
         $this->parser = $parser;
@@ -256,113 +281,121 @@ class Sitemap
             $this->loadRobots();
             try {
                 $this->queue[] = $this->prepare($this->url);
-                do {
-                    $this->crawlPages();
-                    $this->executeCallback();
-                } while ($this->queue);
 
+                do {
+                    $threads = (count($this->queue) < $this->threadsLimit ?
+                        count($this->queue) :
+                        $this->threadsLimit);
+                    $this->crawlPages($threads);
+                } while (count($this->queue));
+
+                $this->log("Queue is empty");
                 $this->executeCallback(true);
             } catch (\Exception $e) {
-                $this->errors[] = ['code' => $e->getCode(), 'message' => $e->getMessage()];
+                $this->errors[] = [
+                    'code' => $e->getCode(),
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e)
+                ];
+                var_dump($this->errors);
             }
         }
     }
 
     /**
-     * @param $url
+     * @param $threads
      */
-    /*private function crawlPage($url)
+    private function crawlPages($threads)
     {
-        $this->loadPage($url);
-        $links = $this->getCorrectLinks();
-    }*/
+        $promises = [];
+        for ($i = 0; $threads < count($promises) || $i < $threads; $i++) {
 
-    /**
-     * @return null
-     */
-    private function crawlPages()
-    {
-        if (!($url = array_shift($this->queue))) {
-            return;
-        }
-        if (isset($this->scanned[$url])) {
-            return;
-        }
-        $this->scanned[$url] = true;
-        if ($this->getUrlDepth($url) > $this->maxDepth) {
-            return;
-        }
-        $this->log('Start scan page ' . $url, 1);
-        try {
-            if (!$this->loadPage($url)) {
-                if ('/' === substr($url, -1)) {
-                    $url = rtrim($url, '/');
+            if (!($url = array_shift($this->queue))) {
+                break;
+            }
+            if (isset($this->scanned[$url])) {
+                continue;
+            }
+            $this->scanned[$url] = true;
+            if ($this->getUrlDepth($url) > $this->maxDepth) {
+                continue;
+            }
+            $this->log('Start scan page ' . $url, 1);
+            $promise = $this->loadPage($url, true);
+
+
+            $promise->then(function (ResponseInterface $response) use ($url) {
+                if ($lastModified = $response->getHeaderLine("Last-Modified")) {
+                    $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified)->format('Y-m-d\TH:i:sP');
                 } else {
-                    $url .= '/';
+                    $lastModified = null;
                 }
 
-                if (!$this->loadPage($url)) {
-                    return;
+                if (200 !== (int)$response->getStatusCode()) {
+                    $this->log('Error! Url: ' . $url . ' Status: ' . $response->getStatusCode());
+                    return false;
                 }
-            }
-        } catch (\Exception $e) {
-            $this->errors[] = ['code' => $e->getCode(), 'message' => $e->getMessage()];
-            $this->log("Error while retrieving page {$url}.\n" . print_r(end($this->errors)), 2);
-            return;
+
+                $linksAmount = $this->storage->countLinks($this->url);
+
+                if ($this->limit && $linksAmount >= $this->limit) {
+                    $this->queue = [];
+                    return false;
+                }
+
+                $result = $this->parser->load($response->getBody());
+
+                $pageInfo = [
+                    'canonical' => $result['meta']['canonical'],
+                    'metaRobots' => $result['meta']['robots'],
+
+                    "status" => $response->getStatusCode(),
+                    "lastModified" => $lastModified
+                ];
+
+                if (false !== strpos($pageInfo['metaRobots'], 'noindex')) {
+                    $this->log("Page has meta tag noindex\n", 2);
+                    return false;
+                }
+                $this->storage->addLink($this->url, $url, $pageInfo);
+                $this->log('Link ' . $url . ' added', 2);
+                if (false !== strpos($pageInfo['metaRobots'], 'nofollow')) {
+                    $this->log("Page has meta tag nofollow\n", 2);
+                    return false;
+                }
+                $links = $this->getCorrectLinks($result['links']);
+
+                foreach ($links as $link) {
+                    $preparedLink = $this->prepare($link);
+                    if (isset($this->scanned[$preparedLink])) {
+                        continue;
+                    } elseif (in_array($preparedLink, $this->queue)) {
+                        continue;
+                    } elseif ($this->getUrlDepth($preparedLink) > $this->maxDepth) {
+                        continue;
+                    }
+                    $this->queue[] = $preparedLink;
+                }
+            }, function (RequestException $e) use ($url) {
+                if (0 === $e->getCode()) {
+                    $this->queue[] = $url;
+                }
+                $this->log("Failed to load resource $url\n", 2);
+            });
+
+            $promises[] = $promise;
         }
-        $linksAmount = $this->storage->countLinks($this->url);
-        if ($this->limit && $linksAmount >= $this->limit) {
-            $this->queue = [];
-            return;
+        try {
+            \GuzzleHttp\Promise\unwrap($promises);
+        } catch (ClientException $e) {
+            $this->log("Client error while resolving promise: " . $e->getMessage());
+        } catch (ServerException $e) {
+            $this->log("Server error while resolving promise: " . $e->getMessage());
+        } catch (ConnectException $e) {
+            $this->log("Connection error while resolving promise: " . $e->getMessage());
         }
-        $pageInfo = $this->getPageInfo();
-        if (false !== strpos($pageInfo['metaRobots'], 'noindex')) {
-            $this->log("Page has meta tag noindex\n", 2);
-            return;
-        }
-        $this->storage->addLink($this->url, $url, $pageInfo);
-        $this->log('Link ' . $url . ' added', 2);
-        if (false !== strpos($pageInfo['metaRobots'], 'nofollow')) {
-            $this->log("Page has meta tag nofollow\n", 2);
-            return;
-        }
-        $links = $this->getCorrectLinks();
-        foreach ($links as $link) {
-            $preparedLink = $this->prepare($link);
-            if (isset($this->scanned[$preparedLink])) {
-                continue;
-            } elseif (in_array($preparedLink, $this->queue)) {
-                continue;
-            } elseif ($this->getUrlDepth($url) > $this->maxDepth) {
-                continue;
-            }
-            $this->queue[] = $preparedLink;
-        }
-        $this->log("Page {$url} scanned. Links amount: " . count($links), 1);
-        $this->log("Total added/scanned/queue: {$linksAmount}/" . count($this->scanned) . "/" . count($this->queue) . "\n", 1);
+        $this->executeCallback(true);
     }
-
-    /**
-     * @return int|null
-     */
-    /*public function backgroundCrawl()
-    {
-        if (!$this->storage->hasScan($this->url)) {
-            $processString = dirname(__FILE__) . '/background.php --url ' . $this->url . ' --dest ./sitemap.xml --limit=' . $this->limit;
-            if ($this->debug) {
-                $processString .= ' --debug';
-            }
-            $process = new Process('php ' . $processString);
-            try {
-                $process->start();
-            } catch (\RuntimeException $e) {
-                $this->log($e->getMessage());
-            }
-            return $process->getPid();
-        }
-
-        return null;
-    }*/
 
     /**
      *
@@ -436,7 +469,11 @@ class Sitemap
 
             foreach ($chunks as $key => $chunk) {
                 if (1 === count($chunks)) {
-                    $sitemapPath = $path . "/sitemap.xml";
+                    if ($this->async) {
+                        $sitemapPath = $path . "/sitemap_a.xml";
+                    } else {
+                        $sitemapPath = $path . "/sitemap.xml";
+                    }
                 } else {
                     $index = $key + 1;
                     $sitemapPath = $path . "/sitemap_{$index}.xml";
@@ -487,31 +524,33 @@ class Sitemap
     }
 
     /**
+     * @param array $links
      * @return mixed
      */
-    private function getCorrectLinks()
+    private function getCorrectLinks($links = null)
     {
-        $links = $this->parser->filter('a')->reduce(function(Crawler $link)  {
-            $rel = $link->attr('rel');
-            $href = $link->attr('href');
-            if ('nofollow' === strtolower($rel)) {
-                return false;
+        if (is_null($links)) {
+            $links = [];
+            foreach ($this->parser->getLinks() as $link) {
+                if (isset($this->scanned[$this->prepare($link)])) {
+                    continue;
+                }
+
+                if ($this->checkLink($link)) {
+                    $links[] = $link;
+                }
             }
-            if (isset($this->scanned[$this->prepare($href)])) {
-                return false;
-            }
-            return $this->checkLink($href);
-        })->each(function(Crawler $link) {
-            return $link->attr('href');
-        });
+        }
+
         return array_unique($links);
     }
 
     /**
      * @param string $url
-     * @return boolean
+     * @param bool $async
+     * @return bool|PromiseInterface
      */
-    private function loadPage($url)
+    private function loadPage($url, $async = false)
     {
         if ($this->sleepTimeout) {
             sleep($this->sleepTimeout);
@@ -522,10 +561,16 @@ class Sitemap
         }
 
         try {
-            $headers = [
+            $options = ["timeout" => $this->timeout, "headers" => [
                 "User-Agent" => $this->userAgent
-            ];
-            $response = $this->client->get($url, ["timeout" => $this->timeout, "headers" => $headers]);
+            ]];
+
+            if ($async) {
+                $promise = $this->client->getAsync($url, $options);
+                return $promise;
+            }
+
+            $response = $this->client->get($url, $options);
 
             if ($lastModified = $response->getHeaderLine("Last-Modified")) {
                 $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified)->format('Y-m-d\TH:i:sP');
@@ -543,8 +588,7 @@ class Sitemap
                 return false;
             }
 
-            $this->parser->clear();
-            $this->parser->addHtmlContent($response->getBody());
+            $this->parser->load($response->getBody());
         } catch (RequestException $e) {
             if (429 === (int) $e->getCode()) {
                 $this->sleepTimeout += 0.5;
@@ -556,6 +600,9 @@ class Sitemap
         return true;
     }
 
+    /**
+     * @param bool|false $force
+     */
     private function executeCallback($force = false)
     {
         if ($this->scanned && $this->callback && $this->callbackFrequency) {
@@ -593,40 +640,8 @@ class Sitemap
     }
 
     /**
-     * @return array
+     *
      */
-    private function getPageInfo()
-    {
-        $canonical = $metaRobots = $title = $description = null;
-
-        $this->parser->filter('meta')->each(function(Crawler $node) use (&$metaRobots, &$canonical) {
-            $name = strtolower($node->attr('name'));
-            $content = $node->attr('content');
-
-            if ($canonical && $metaRobots) {
-                return;
-            }
-
-            if ('robots' === $name && is_null($metaRobots)) {
-                $metaRobots = $content;
-            } elseif ('canonical' === $name && is_null($canonical)) {
-                $canonical = $content;
-            }
-        });
-
-        return [
-            'status' => $this->lastUrlData["status"],
-            'modified' => $this->lastUrlData["lastModified"],
-            'canonical' => $canonical,
-            'metaRobots' => $metaRobots,
-
-            //'title' => $title,
-            //'description' => $description,
-            //'h1' => (array) $this->parser->find('h1'),
-            //'images' => (array) $this->parser->find('img'),
-        ];
-    }
-
     private function loadRobots()
     {
         try {
@@ -684,6 +699,10 @@ class Sitemap
         return $xml->outputMemory(true);
     }
 
+    /**
+     * @param $amount
+     * @return string
+     */
     private function generateSitemapsIndex($amount)
     {
         $xml = new \XMLWriter();
