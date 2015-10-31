@@ -57,6 +57,7 @@ class SymfonyDomCrawler implements CrawlerInterface
                 return false;
             }
             $links[] = $link->attr('href');
+            return $link;
         });
 
         $this->links = array_unique($links);

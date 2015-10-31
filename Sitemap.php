@@ -1,7 +1,6 @@
 <?php
 namespace vedebel\sitemap;
 
-use Codeception\Exception\ConnectionException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
@@ -165,7 +164,6 @@ class Sitemap
      */
     public function __construct(CrawlerInterface $parser, LinksStorage $storage, $url, array $options = [])
     {
-        $url = str_replace('www.', '', $url);
         $parsed = parse_url($url);
 
         if (isset($parsed['scheme'])) {
@@ -283,11 +281,10 @@ class Sitemap
                 $this->queue[] = $this->prepare($this->url);
 
                 do {
-                    $threads = (count($this->queue) < $this->threadsLimit ?
-                        count($this->queue) :
-                        $this->threadsLimit);
+                    $queueLength = count($this->queue);
+                    $threads = ($queueLength < $this->threadsLimit) ? $queueLength : $this->threadsLimit;
                     $this->crawlPages($threads);
-                } while (count($this->queue));
+                } while ($queueLength);
 
                 $this->log("Queue is empty");
                 $this->executeCallback(true);
@@ -324,7 +321,7 @@ class Sitemap
             $promise = $this->loadPage($url, true);
 
 
-            $promise->then(function (ResponseInterface $response) use ($url) {
+            $promise->then(function(ResponseInterface $response) use ($url) {
                 if ($lastModified = $response->getHeaderLine("Last-Modified")) {
                     $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified)->format('Y-m-d\TH:i:sP');
                 } else {
@@ -376,6 +373,8 @@ class Sitemap
                     }
                     $this->queue[] = $preparedLink;
                 }
+
+                return true;
             }, function (RequestException $e) use ($url) {
                 if (0 === $e->getCode()) {
                     $this->queue[] = $url;
@@ -561,9 +560,13 @@ class Sitemap
         }
 
         try {
-            $options = ["timeout" => $this->timeout, "headers" => [
-                "User-Agent" => $this->userAgent
-            ]];
+            $options = [
+                "timeout" => $this->timeout,
+                'allow_redirects' => false,
+                "headers" => [
+                    "User-Agent" => $this->userAgent
+                ]
+            ];
 
             if ($async) {
                 $promise = $this->client->getAsync($url, $options);
@@ -626,7 +629,8 @@ class Sitemap
         if (0 === strpos($url, '.')) {
             $url = substr($url, 1);
         }
-        return $this->protocol . '://' . $this->host . '/' . ltrim(str_replace([$this->protocol . '://', $this->host], '', $url), '/');
+        $host = $this->protocol . '://' . $this->host;
+        return $host . '/' . ltrim(str_replace([$this->protocol . '://', $this->host], '', $url), '/');
     }
 
     /**

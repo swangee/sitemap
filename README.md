@@ -14,7 +14,7 @@ $generator->crawl();
 $generator->saveXml('sitemap.xml');
 ```
 
-If you want to monitor process while site is crawling, you can add callback, wich will be called every n scanned links. Default is 10.
+If you want to monitor process while site is crawling, you can add callback, which will be called every n scanned links. Default is 10.
 ```php
 $generator->setCallback(function(array $scanned, array $added, array $queue) {
     echo "This is message form callback.\nScanned: "

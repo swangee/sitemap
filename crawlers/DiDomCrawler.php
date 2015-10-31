@@ -4,6 +4,10 @@ namespace vedebel\sitemap\crawlers;
 use DiDom\Document;
 use DiDom\Element;
 
+/**
+ * Class DiDomCrawler
+ * @package vedebel\sitemap\crawlers
+ */
 class DiDomCrawler implements CrawlerInterface
 {
     /**
@@ -21,11 +25,18 @@ class DiDomCrawler implements CrawlerInterface
      */
     private $links;
 
+    /**
+     * @param Document $crawler
+     */
     public function __construct(Document $crawler)
     {
         $this->crawler = $crawler;
     }
 
+    /**
+     * @param $html
+     * @return array
+     */
     public function load($html)
     {
         $metaTags = [
@@ -60,6 +71,10 @@ class DiDomCrawler implements CrawlerInterface
         return ['links' => $links, 'meta' => $metaTags];
     }
 
+    /**
+     * @param $name
+     * @return null
+     */
     public function getMetaTag($name)
     {
         if (isset($this->metaTags[$name])) {
@@ -69,6 +84,9 @@ class DiDomCrawler implements CrawlerInterface
         return null;
     }
 
+    /**
+     * @return array
+     */
     public function getLinks()
     {
         return $this->links;
