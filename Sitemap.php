@@ -191,7 +191,7 @@ class Sitemap
         $this->async = (!empty($options['async']) ? (bool) $options['async'] : false);
         $this->limit = (!empty($options['limit']) ? (int) $options['limit'] : 1000);
         $this->timeout = (!empty($options['timeout']) ? (int) $options['timeout'] : 20);
-        $this->threadsLimit = (!empty($options['threadsLimit']) ? (int) $options['threadsLimit'] : 100);
+        $this->threadsLimit = (!empty($options['threadsLimit']) ? (int) $options['threadsLimit'] : 5);
         $this->sleepTimeout = 0;
         $this->errors = [];
         $this->parser = $parser;
@@ -323,7 +323,8 @@ class Sitemap
 
             $promise->then(function(ResponseInterface $response) use ($url) {
                 if ($lastModified = $response->getHeaderLine("Last-Modified")) {
-                    $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified)->format('Y-m-d\TH:i:sP');
+                    $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified);
+                    $lastModified = $lastModified ? $lastModified->format('Y-m-d\TH:i:sP') : null;
                 } else {
                     $lastModified = null;
                 }
@@ -576,7 +577,8 @@ class Sitemap
             $response = $this->client->get($url, $options);
 
             if ($lastModified = $response->getHeaderLine("Last-Modified")) {
-                $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified)->format('Y-m-d\TH:i:sP');
+                $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified);
+                $lastModified = $lastModified ? $lastModified->format('Y-m-d\TH:i:sP') : null;
             } else {
                 $lastModified = null;
             }
