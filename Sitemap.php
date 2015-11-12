@@ -351,12 +351,11 @@ class Sitemap
                     "lastModified" => $lastModified
                 ];
 
-                if (false !== strpos($pageInfo['metaRobots'], 'noindex')) {
-                    $this->log("Page has meta tag noindex\n", 2);
-                    return false;
+                if (false === strpos($pageInfo['metaRobots'], 'noindex')) {
+                    $this->storage->addLink($this->url, $url, $pageInfo);
+                    $this->log('Link ' . $url . ' added', 2);
                 }
-                $this->storage->addLink($this->url, $url, $pageInfo);
-                $this->log('Link ' . $url . ' added', 2);
+
                 if (false !== strpos($pageInfo['metaRobots'], 'nofollow')) {
                     $this->log("Page has meta tag nofollow\n", 2);
                     return false;
