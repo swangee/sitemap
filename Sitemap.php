@@ -321,7 +321,7 @@ class Sitemap
             $promise = $this->loadPage($url, true);
 
 
-            $promise->then(function(ResponseInterface $response) use ($url) {
+            $promise->then(function(ResponseInterface $response) use ($url, $threads) {
                 if ($lastModified = $response->getHeaderLine("Last-Modified")) {
                     $lastModified = \DateTime::createFromFormat("D, d M Y H:i:s O", $lastModified);
                     $lastModified = $lastModified ? $lastModified->format('Y-m-d\TH:i:sP') : null;
@@ -351,12 +351,12 @@ class Sitemap
                     "lastModified" => $lastModified
                 ];
 
-                if (false === strpos($pageInfo['metaRobots'], 'noindex')) {
+                if (false === stripos($pageInfo['metaRobots'], 'noindex')) {
                     $this->storage->addLink($this->url, $url, $pageInfo);
                     $this->log('Link ' . $url . ' added', 2);
                 }
 
-                if (false !== strpos($pageInfo['metaRobots'], 'nofollow')) {
+                if (false !== stripos($pageInfo['metaRobots'], 'nofollow')) {
                     $this->log("Page has meta tag nofollow\n", 2);
                     return false;
                 }
@@ -375,11 +375,13 @@ class Sitemap
                 }
 
                 return true;
-            }, function (RequestException $e) use ($url) {
+            }, function (RequestException $e) use ($url, $threads) {
                 if (0 === $e->getCode()) {
                     $this->queue[] = $url;
+                } elseif (in_array((int) $e->getCode(), [429, 503])) {
+                    $this->queue[] = $url;
                 }
-                $this->log("Failed to load resource $url\n", 2);
+                $this->log("Failed to load resource $url with error: " . $e->getMessage() . "\n", 2);
             });
 
             $promises[] = $promise;
@@ -390,6 +392,18 @@ class Sitemap
             $this->log("Client error while resolving promise: " . $e->getMessage());
         } catch (ServerException $e) {
             $this->log("Server error while resolving promise: " . $e->getMessage());
+
+            if (in_array((int) $e->getCode(), [429, 503])) {
+                if ($this->threadsLimit > 1) {
+                    $this->threadsLimit--;
+                }
+
+                $this->sleepTimeout += 0.5;
+
+                $this->log("Sleep for 5 minutes. Threads limit is decremented. Now is {$this->threadsLimit}");
+
+                sleep(300);
+            }
         } catch (ConnectException $e) {
             $this->log("Connection error while resolving promise: " . $e->getMessage());
         }
@@ -551,12 +565,12 @@ class Sitemap
      */
     private function loadPage($url, $async = false)
     {
-        if ($this->sleepTimeout) {
-            sleep($this->sleepTimeout);
-        }
-
         if (false === strpos($url, $this->host)) {
             $url = $this->protocol . '://' . $this->host . '/' . ltrim($url, '/');
+        }
+
+        if ($this->sleepTimeout) {
+            sleep($this->sleepTimeout);
         }
 
         try {

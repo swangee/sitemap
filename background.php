@@ -39,7 +39,7 @@ $storage = new vedebel\sitemap\storages\BasicLinksStorage();
 $generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, [
     'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit
 ]);
-$generator->setLoader(new GuzzleHttp\Client());
+$generator->setLoader(new GuzzleHttp\Client(['cookies' => true]));
 $generator->setCallback(function(array $scanned, array $added, array $queue) {
     echo "This is message form callback.\nScanned: "
         . count($scanned) . "\nAdded: " . count($added) . "\nQueue: " . count($queue) . "\n";
