@@ -36,6 +36,12 @@ $parser = new DiDomCrawler(new \DiDom\Document());
 
 $storage = new vedebel\sitemap\storages\BasicLinksStorage();
 
+$redis = new Redis();
+$redis->pconnect('localhost');
+$redis->setOption(Redis::OPT_PREFIX, 'site_crawler:');
+
+$storage = new vedebel\sitemap\storages\RedisLinksStorage($redis, 'test');
+
 $generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, [
     'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit
 ]);
