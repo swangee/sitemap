@@ -6,6 +6,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
+use GuzzleHttp\Exception\TooManyRedirectsException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\ResponseInterface;
 use vedebel\sitemap\crawlers\CrawlerInterface;
@@ -318,8 +319,13 @@ class Sitemap
                 continue;
             }
             $this->log('Start scan page ' . $url, 1);
-            $promise = $this->loadPage($url, true);
 
+            try {
+                $promise = $this->loadPage($url, true);
+            } catch (TooManyRedirectsException $e) {
+                $this->log("Failed to load resource $url with error: " . $e->getMessage() . "\n", 2);
+                continue;
+            }
 
             $promise->then(function(ResponseInterface $response) use ($url, $threads) {
                 if ($lastModified = $response->getHeaderLine("Last-Modified")) {
@@ -352,6 +358,9 @@ class Sitemap
                 ];
 
                 if (false === stripos($pageInfo['metaRobots'], 'noindex')) {
+                    if (preg_match('@\?.*=[0-9]+@', $url)) {
+                        var_dump($pageInfo);
+                    }
                     $this->storage->addLink($this->url, $url, $pageInfo);
                     $this->log('Link ' . $url . ' added', 2);
                 }
@@ -375,7 +384,7 @@ class Sitemap
                 }
 
                 return true;
-            }, function (RequestException $e) use ($url, $threads) {
+            }, function (\Exception $e) use ($url, $threads) {
                 if (0 === $e->getCode()) {
                     $this->queue[] = $url;
                 } elseif (in_array((int) $e->getCode(), [429, 503])) {
@@ -388,6 +397,8 @@ class Sitemap
         }
         try {
             \GuzzleHttp\Promise\unwrap($promises);
+        } catch (TooManyRedirectsException $e) {
+            $this->log("Client error while resolving promise: " . $e->getMessage());
         } catch (ClientException $e) {
             $this->log("Client error while resolving promise: " . $e->getMessage());
         } catch (ServerException $e) {
@@ -576,7 +587,7 @@ class Sitemap
         try {
             $options = [
                 "timeout" => $this->timeout,
-                'allow_redirects' => false,
+                'allow_redirects' => true,
                 "headers" => [
                     "User-Agent" => $this->userAgent
                 ]
@@ -607,6 +618,9 @@ class Sitemap
             }
 
             $this->parser->load($response->getBody());
+        } catch (TooManyRedirectsException $e) {
+            $this->log('Error! Url: ' . $url . '. ' . $e->getMessage());
+            return false;
         } catch (RequestException $e) {
             if (429 === (int) $e->getCode()) {
                 $this->sleepTimeout += 0.5;
@@ -705,7 +719,7 @@ class Sitemap
         $xml->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
         foreach ($links as $linkItem) {
             $xml->startElement('url');
-            $xml->writeElement('loc', urldecode(urldecode($linkItem['link'])));
+            $xml->writeElement('loc', $linkItem['link']);
             if (!empty($linkItem['modified'])) {
                 $xml->writeElement('lastmod', $linkItem['modified']);
             }
