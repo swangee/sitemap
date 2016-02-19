@@ -157,6 +157,10 @@ class Sitemap
      */
     private $fileLinksLimit;
 
+    private $saveHTML;
+
+    private $tmpPath;
+
     /**
      * @param CrawlerInterface $parser
      * @param LinksStorage $storage
@@ -208,6 +212,9 @@ class Sitemap
         $this->debug = (!empty($options['debug']) ? (bool) $options['debug'] : false);
         $this->debugMode = (!empty($options['debugMode']) ? (int) $options['debugMode'] : 2);
 
+        $this->saveHTML = false;
+        $this->tmpPath = '';
+
         $this->logFile = (!empty($options['logDir']) ? rtrim($options['logDir'], '/') : dirname(__FILE__)) . '/log.txt';
         if (2 === $this->debugMode && !is_writable($this->logFile)) {
             $this->debugMode = 1;
@@ -245,6 +252,23 @@ class Sitemap
     public function setUserAgent($useAgent)
     {
         $this->userAgent = $useAgent;
+    }
+
+    public function enableSaveHTML()
+    {
+        $this->saveHTML = true;
+    }
+
+    public function disableSaveHTML()
+    {
+        $this->saveHTML = true;
+    }
+
+    public function setTempPath($path)
+    {
+        if (is_writable($path)) {
+            $this->tmpPath = $path;
+        }
     }
 
     /**
@@ -347,7 +371,9 @@ class Sitemap
                     return false;
                 }
 
-                $result = $this->parser->load($response->getBody());
+                $html = (string)$response->getBody();
+
+                $result = $this->parser->load($html);
 
                 $pageInfo = [
                     'canonical' => $result['meta']['canonical'],
@@ -358,8 +384,8 @@ class Sitemap
                 ];
 
                 if (false === stripos($pageInfo['metaRobots'], 'noindex')) {
-                    if (preg_match('@\?.*=[0-9]+@', $url)) {
-                        var_dump($pageInfo);
+                    if ($this->saveHTML && $this->tmpPath) {
+                        file_put_contents($this->tmpPath . '/' . urlencode($url) . '.tmp.html', $html);
                     }
                     $this->storage->addLink($this->url, $url, $pageInfo);
                     $this->log('Link ' . $url . ' added', 2);
