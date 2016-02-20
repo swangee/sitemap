@@ -161,6 +161,8 @@ class Sitemap
 
     private $tmpPath;
 
+    private $contentExcludePatterns;
+
     /**
      * @param CrawlerInterface $parser
      * @param LinksStorage $storage
@@ -205,6 +207,7 @@ class Sitemap
         $this->lastUrlData = [];
         $this->excludePatterns = [];
         $this->fileLinksLimit = 50000;
+        $this->contentExcludePatterns = [];
         $this->excludeExtension = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"];
         $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
         $this->userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36";
@@ -269,6 +272,29 @@ class Sitemap
         if (is_writable($path)) {
             $this->tmpPath = $path;
         }
+    }
+
+    public function addExcludePatterns(array $patterns)
+    {
+        $patterns = array_merge($this->excludePatterns, $patterns);
+        $this->excludePatterns = array_unique($patterns);
+    }
+
+    public function addContentExcludePatterns(array $patterns)
+    {
+        foreach ($patterns as &$pattern) {
+            $pattern = trim(str_replace("*", ".*", $pattern));
+            $pattern = str_replace("?", '\?', $pattern);
+        }
+
+        $patterns = array_merge($this->contentExcludePatterns, $patterns);
+        $this->contentExcludePatterns = array_unique($patterns);
+    }
+
+    public function addExcludeExtensions(array $extensions)
+    {
+        $extensions = array_merge($this->excludeExtension, $extensions);
+        $this->excludeExtension = array_unique($extensions);
     }
 
     /**
@@ -383,7 +409,7 @@ class Sitemap
                     "lastModified" => $lastModified
                 ];
 
-                if (false === stripos($pageInfo['metaRobots'], 'noindex')) {
+                if (false === stripos($pageInfo['metaRobots'], 'noindex') && $this->checkContent($html)) {
                     if ($this->saveHTML && $this->tmpPath) {
                         file_put_contents($this->tmpPath . '/' . urlencode($url) . '.tmp.html', $html);
                     }
@@ -495,6 +521,20 @@ class Sitemap
                     $this->log("Link {$link} is incorrect according to robots rule {$pattern}", 4);
                     return false;
                 }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param $html
+     * @return bool
+     */
+    private function checkContent($html)
+    {
+        foreach ($this->contentExcludePatterns as $pattern) {
+            if (preg_match('@' . $pattern . '@iu', $html)) {
+                return false;
             }
         }
         return true;
@@ -713,6 +753,8 @@ class Sitemap
             $robots = $response->getBody();
             preg_match('@user-agent:\s?\*(.+)(user-agent|$).*@isU', $robots, $matches);
 
+            $patterns = [];
+
             if (isset($matches[1])) {
                 $commonRules = explode("\n", trim($matches[1]));
                 foreach ($commonRules as $rule) {
@@ -723,11 +765,14 @@ class Sitemap
                     if (preg_match("@^disallow$@i", $rule[0])) {
                         $regex = trim(str_replace("*", ".*", $rule[1]));
                         $regex = str_replace("?", '\?', $regex);
-                        $this->excludePatterns[] = $regex;
+                        $patterns[] = $regex;
                     }
                 }
             }
+
+            $this->addExcludePatterns($patterns);
         } catch (RequestException $e) {
+            $this->log('No robots file found');
         }
     }
 

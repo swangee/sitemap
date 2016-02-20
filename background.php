@@ -46,8 +46,9 @@ $storage = new vedebel\sitemap\storages\RedisLinksStorage($redis, 'test');
 $generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, [
     'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit
 ]);
-$generator->setTempPath(__DIR__ . '/tmp');
-$generator->enableSaveHTML();
+$generator->addContentExcludePatterns([
+    'DB query error'
+]);
 $generator->setLoader(new GuzzleHttp\Client(['cookies' => true]));
 $generator->setCallback(function(array $scanned, array $added, array $queue) {
     echo "This is message form callback.\nScanned: "
