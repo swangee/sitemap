@@ -276,9 +276,10 @@ class Sitemap
 
     public function addExcludePatterns(array $patterns)
     {
-        foreach ($patterns as &$pattern) {
+        foreach ($patterns as $key => $pattern) {
             $pattern = trim(str_replace("*", ".*", $pattern));
             $pattern = str_replace("?", '\?', $pattern);
+            $patterns[$key] = $pattern;
         }
 
         $patterns = array_merge($this->excludePatterns, $patterns);
@@ -287,9 +288,10 @@ class Sitemap
 
     public function addContentExcludePatterns(array $patterns)
     {
-        foreach ($patterns as &$pattern) {
+        foreach ($patterns as $key => $pattern) {
             $pattern = trim(str_replace("*", ".*", $pattern));
             $pattern = str_replace("?", '\?', $pattern);
+            $patterns[$key] = $pattern;
         }
 
         $patterns = array_merge($this->contentExcludePatterns, $patterns);
@@ -522,8 +524,8 @@ class Sitemap
             return false;
         } else {
             foreach ($this->excludePatterns as $pattern) {
-                if (preg_match('@^' . $pattern . '$@', $link)) {
-                    $this->log("Link {$link} is incorrect according to robots rule {$pattern}", 4);
+                if (preg_match('@' . $pattern . '@', $link)) {
+                    $this->log("Link {$link} is incorrect according to rule {$pattern}", 4);
                     return false;
                 }
             }
