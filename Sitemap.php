@@ -276,6 +276,11 @@ class Sitemap
 
     public function addExcludePatterns(array $patterns)
     {
+        foreach ($patterns as &$pattern) {
+            $pattern = trim(str_replace("*", ".*", $pattern));
+            $pattern = str_replace("?", '\?', $pattern);
+        }
+
         $patterns = array_merge($this->excludePatterns, $patterns);
         $this->excludePatterns = array_unique($patterns);
     }
@@ -763,9 +768,7 @@ class Sitemap
                     }
                     $rule = explode(":", $rule);
                     if (preg_match("@^disallow$@i", $rule[0])) {
-                        $regex = trim(str_replace("*", ".*", $rule[1]));
-                        $regex = str_replace("?", '\?', $regex);
-                        $patterns[] = $regex;
+                        $patterns[] = $rule[1];
                     }
                 }
             }
