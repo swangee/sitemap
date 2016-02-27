@@ -626,20 +626,23 @@ class Sitemap
      */
     private function getCorrectLinks($links = null)
     {
-        if (is_null($links)) {
-            $links = [];
-            foreach ($this->parser->getLinks() as $link) {
-                if (isset($this->scanned[$this->prepare($link)])) {
-                    continue;
-                }
+        $correctLinks = [];
 
-                if ($this->checkLink($link)) {
-                    $links[] = $link;
-                }
+        if (is_null($links)) {
+            $links = $this->parser->getLinks();
+        }
+
+        foreach ($links as $link) {
+            if (isset($this->scanned[$this->prepare($link)])) {
+                continue;
+            }
+
+            if ($this->checkLink($link)) {
+                $correctLinks[] = $link;
             }
         }
 
-        return array_unique($links);
+        return array_unique($correctLinks);
     }
 
     /**

@@ -44,10 +44,7 @@ $redis->setOption(Redis::OPT_PREFIX, 'site_crawler:');
 $storage = new vedebel\sitemap\storages\RedisLinksStorage($redis, 'test');
 
 $generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, [
-    'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit
-]);
-$generator->addContentExcludePatterns([
-    'DB query error'
+    'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit, 'logDir' => __DIR__ . '/tmp'
 ]);
 $generator->setLoader(new GuzzleHttp\Client(['cookies' => true]));
 $generator->setCallback(function(array $scanned, array $added, array $queue) {

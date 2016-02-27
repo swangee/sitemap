@@ -2,7 +2,8 @@
 tmp
 .idea
 log.txt
-vendor
+/tmp
+vendors
 .phpintel
 .gitignore
 composer.lock
