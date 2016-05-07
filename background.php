@@ -43,14 +43,26 @@ $redis->setOption(Redis::OPT_PREFIX, 'site_crawler:');
 
 $storage = new vedebel\sitemap\storages\RedisLinksStorage($redis, 'test');
 
-$generator = new vedebel\sitemap\Sitemap($parser, $storage, $url, [
-    'limit' => $limit, 'debug' => 1, 'threadsLimit' => $threadsLimit, 'logDir' => __DIR__ . '/tmp'
+$config = new \vedebel\sitemap\Config(new \vedebel\sitemap\Url('http://seo-studio.ua'), [
+    'limits' => [
+        'threads' => $threadsLimit,
+        'linksTotal' => $limit,
+        'linksPerFile' => 50
+    ],
+    'debug' => [
+        'enable' => true
+    ],
+    'onProgress' => [
+        'frequency' => 100,
+        'callable' => function (array $scanned, array $added, array $queue) {
+            echo "This is message form callback.\nScanned: "
+                . count($scanned) . "\nAdded: " . count($added) . "\nQueue: " . count($queue) . "\n";
+        }
+    ]
 ]);
+
+$generator = new vedebel\sitemap\Sitemap($parser, $storage, $config);
 $generator->setLoader(new GuzzleHttp\Client(['cookies' => true]));
-$generator->setCallback(function(array $scanned, array $added, array $queue) {
-    echo "This is message form callback.\nScanned: "
-        . count($scanned) . "\nAdded: " . count($added) . "\nQueue: " . count($queue) . "\n";
-});
 if (isset($options['rescan'])) {
     $generator->rescan();
 } else {

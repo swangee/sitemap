@@ -19,73 +19,14 @@ use vedebel\sitemap\storages\LinksStorage;
 class Sitemap
 {
     /**
-     * @var string
-     */
-    private $url;
-
-    /**
-     * @var bool
-     */
-    private $async;
-
-    /**
-     * @var string
-     */
-    private $host;
-
-    /**
-     * @var string
-     */
-    private $path;
-
-    /**
-     * @var string
-     */
-    private $query;
-
-    /**
-     * @var string
-     */
-    private $protocol;
-    /**
-     * @var string
-     */
-    private $fragment;
-
-    /**
      * @var array
      */
     private $queue;
 
     /**
-     * @var callable
+     * @var Config
      */
-    private $callback;
-
-    /**
-     * @var int
-     */
-    private $callbackFrequency;
-
-    /**
-     * @var string
-     */
-    private $logFile;
-
-    /**
-     * @var bool
-     */
-    private $debug;
-
-    /**
-     * @var int
-     */
-    private $debugMode;
-
-    /**
-     * @var int
-     */
-    private $limit;
+    private $config;
 
     /**
      * @var array
@@ -103,34 +44,9 @@ class Sitemap
     private $errors;
 
     /**
-     * @var int
-     */
-    private $maxDepth;
-
-    /**
      * @var Client
      */
     private $client;
-
-    /**
-     * @var float
-     */
-    private $timeout;
-
-    /**
-     * @var int
-     */
-    private $threadsLimit;
-
-    /**
-     * @var string
-     */
-    private $userAgent;
-
-    /**
-     * @var int
-     */
-    private $sleepTimeout;
 
     /**
      * @var CrawlerInterface
@@ -153,76 +69,28 @@ class Sitemap
     private $excludePatterns;
 
     /**
-     * @var int
+     * @var array
      */
-    private $fileLinksLimit;
-
-    private $saveHTML;
-
-    private $tmpPath;
-
     private $contentExcludePatterns;
 
     /**
      * @param CrawlerInterface $parser
      * @param LinksStorage $storage
-     * @param $url
-     * @param array $options
+     * @param Config $config
      */
-    public function __construct(CrawlerInterface $parser, LinksStorage $storage, $url, array $options = [])
+    public function __construct(CrawlerInterface $parser, LinksStorage $storage, Config $config)
     {
-        $parsed = parse_url($url);
-
-        if (isset($parsed['scheme'])) {
-            $this->protocol = $parsed['scheme'];
-        }
-
-        if (isset($parsed['host'])) {
-            $this->host = $parsed['host'];
-        }
-
-        if (isset($parsed['path'])) {
-            $this->path = ltrim($parsed['path'], '/');
-        }
-
-        if (isset($parsed['query'])) {
-            $this->query = $parsed['query'];
-        }
-
-        if (isset($parsed['fragment'])) {
-            $this->fragment = $parsed['fragment'];
-        }
-
-        $this->url = trim($url, '/');
+        $this->config = $config;
+        
         $this->queue = [];
-        $this->async = (!empty($options['async']) ? (bool) $options['async'] : false);
-        $this->limit = (!empty($options['limit']) ? (int) $options['limit'] : 1000);
-        $this->timeout = (!empty($options['timeout']) ? (int) $options['timeout'] : 20);
-        $this->threadsLimit = (!empty($options['threadsLimit']) ? (int) $options['threadsLimit'] : 5);
-        $this->sleepTimeout = 0;
         $this->errors = [];
         $this->parser = $parser;
         $this->storage = $storage;
         $this->scanned = [];
         $this->lastUrlData = [];
         $this->excludePatterns = [];
-        $this->fileLinksLimit = 50000;
         $this->contentExcludePatterns = [];
         $this->excludeExtension = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"];
-        $this->maxDepth = (!empty($options['depth']) ? $options['depth'] : 3);
-        $this->userAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36";
-
-        $this->debug = (!empty($options['debug']) ? (bool) $options['debug'] : false);
-        $this->debugMode = (!empty($options['debugMode']) ? (int) $options['debugMode'] : 2);
-
-        $this->saveHTML = false;
-        $this->tmpPath = '';
-
-        $this->logFile = (!empty($options['logDir']) ? rtrim($options['logDir'], '/') : dirname(__FILE__)) . '/log.txt';
-        if (2 === $this->debugMode && !is_writable($this->logFile)) {
-            $this->debugMode = 1;
-            $this->log('Can\'t create log file');
-        }
     }
 
     /**
@@ -231,47 +99,6 @@ class Sitemap
     public function setLoader(Client $client)
     {
         $this->client = $client;
-    }
-
-    /**
-     * @param $url
-     */
-    public function setUrl($url)
-    {
-        $this->url = $url;
-    }
-
-    /**
-     * @param $limit
-     */
-    public function setLimit($limit)
-    {
-        $this->limit = $limit;
-    }
-
-    /**
-     * @param string $useAgent
-     */
-    public function setUserAgent($useAgent)
-    {
-        $this->userAgent = $useAgent;
-    }
-
-    public function enableSaveHTML()
-    {
-        $this->saveHTML = true;
-    }
-
-    public function disableSaveHTML()
-    {
-        $this->saveHTML = true;
-    }
-
-    public function setTempPath($path)
-    {
-        if (is_writable($path)) {
-            $this->tmpPath = $path;
-        }
     }
 
     public function addExcludePatterns(array $patterns)
@@ -305,42 +132,27 @@ class Sitemap
     }
 
     /**
-     * @param callable $callback
-     * @param int $frequency
-     */
-    public function setCallback($callback, $frequency = 10)
-    {
-        if (is_callable($callback)) {
-            $this->callback = $callback;
-            $this->callbackFrequency = $frequency;
-        }
-    }
-
-    /**
-     * @param $mode
-     */
-    public function debug($mode)
-    {
-        $this->debug = $mode;
-    }
-
-    /**
      *
      */
     public function crawl()
     {
-        if (!$this->storage->hasScan($this->url)) {
+        /**
+         * @var Url $url
+         */
+        $url = $this->config->get('url');
+        $link = $url->getUrl();
+
+        if (!$this->storage->hasScan($link)) {
             $this->log('Start crawling site');
-            if (empty($this->url)) {
-                throw new \RuntimeException('Root Url cannot be empty');
-            }
             $this->loadRobots();
             try {
-                $this->queue[] = $this->prepare($this->url);
+                $this->queue[] = $this->prepare($link);
+
+                $threadsLimit = $this->config->get('limits.threads');
 
                 do {
                     $queueLength = count($this->queue);
-                    $threads = ($queueLength < $this->threadsLimit) ? $queueLength : $this->threadsLimit;
+                    $threads = ($queueLength < $threadsLimit) ? $queueLength : $threadsLimit;
                     $this->crawlPages($threads);
                 } while ($queueLength);
 
@@ -372,7 +184,7 @@ class Sitemap
                 continue;
             }
             $this->scanned[$url] = true;
-            if ($this->getUrlDepth($url) > $this->maxDepth) {
+            if ($this->getUrlDepth($url) > $this->config->get('maxDepth')) {
                 continue;
             }
             $this->log('Start scan page ' . $url, 1);
@@ -397,9 +209,13 @@ class Sitemap
                     return false;
                 }
 
-                $linksAmount = $this->storage->countLinks($this->url);
+                /**
+                 * @var $pageUrl Url
+                 */
+                $pageUrl = $this->config->get('url');
+                $linksAmount = $this->storage->countLinks($pageUrl->getUrl());
 
-                if ($this->limit && $linksAmount >= $this->limit) {
+                if ($linksAmount >= $this->config->get('limits.linksTotal')) {
                     $this->queue = [];
                     return false;
                 }
@@ -417,10 +233,11 @@ class Sitemap
                 ];
 
                 if (false === stripos($pageInfo['metaRobots'], 'noindex') && $this->checkContent($html)) {
-                    if ($this->saveHTML && $this->tmpPath) {
-                        file_put_contents($this->tmpPath . '/' . urlencode($url) . '.tmp.html', $html);
+                    if ($this->config->get('download.enable')) {
+                        file_put_contents($this->config->get('download.directory')
+                            . '/' . urlencode($url) . '.tmp.html', $html);
                     }
-                    $this->storage->addLink($this->url, $url, $pageInfo);
+                    $this->storage->addLink($pageUrl->getUrl(), $url, $pageInfo);
                     $this->log('Link ' . $url . ' added', 2);
                 }
 
@@ -436,7 +253,7 @@ class Sitemap
                         continue;
                     } elseif (in_array($preparedLink, $this->queue)) {
                         continue;
-                    } elseif ($this->getUrlDepth($preparedLink) > $this->maxDepth) {
+                    } elseif ($this->getUrlDepth($preparedLink) > $this->config->get('maxDepth')) {
                         continue;
                     }
                     $this->queue[] = $preparedLink;
@@ -464,13 +281,16 @@ class Sitemap
             $this->log("Server error while resolving promise: " . $e->getMessage());
 
             if (in_array((int) $e->getCode(), [429, 503])) {
-                if ($this->threadsLimit > 1) {
-                    $this->threadsLimit--;
+                $threads = $this->config->get('limits.threads');
+
+                if ($threads > 1) {
+                    $this->config->set('limits.threads', $threads - 1);
                 }
 
-                $this->sleepTimeout += 0.5;
+                $sleepTimeout = $this->config->get('timeout.sleep');
+                $this->config->set('limits.sleep', $sleepTimeout + 0.5);
 
-                $this->log("Sleep for 5 minutes. Threads limit is decremented. Now is {$this->threadsLimit}");
+                $this->log(sprintf('Sleep for 5 minutes. Threads limit is decremented. Now is %d', $threads));
 
                 sleep(300);
             }
@@ -485,7 +305,12 @@ class Sitemap
      */
     public function rescan()
     {
-        $this->storage->clean($this->url);
+        /**
+         * @var $pageUrl Url
+         */
+        $pageUrl = $this->config->get('url');
+
+        $this->storage->clean($pageUrl->getUrl());
         $this->crawl();
     }
 
@@ -494,7 +319,12 @@ class Sitemap
      */
     public function getLinks()
     {
-        return $this->storage->loadScan($this->url);
+        /**
+         * @var $pageUrl Url
+         */
+        $pageUrl = $this->config->get('url');
+
+        return $this->storage->loadScan($pageUrl->getUrl());
     }
 
     /**
@@ -502,7 +332,11 @@ class Sitemap
      */
     public function linksAdded()
     {
-        return $this->storage->countLinks($this->url);
+        /**
+         * @var $pageUrl Url
+         */
+        $pageUrl = $this->config->get('url');
+        return $this->storage->countLinks($pageUrl->getUrl());
     }
 
     /**
@@ -511,11 +345,16 @@ class Sitemap
      */
     public function checkLink($link)
     {
-        if (preg_match('@^https?://@', $link) && false === strpos($link, $this->host)) {
-            $this->log("Link {$link} has incorrect host. Needed {$this->host}", 4);
+        /**
+         * @var $pageUrl Url
+         */
+        $pageUrl = $this->config->get('url');
+
+        if (preg_match('@^https?://@', $link) && false === strpos($link, $pageUrl->getHost())) {
+            $this->log("Link {$link} has incorrect host. Needed {$pageUrl->getHost()}", 4);
             return false;
-        } elseif (!empty($this->uri()) && false === strpos($link, $this->uri())) {
-            $this->log("Link {$link} is doesn't have {$this->uri()} part", 4);
+        } elseif (!empty($pageUrl->getUri()) && false === strpos($link, $pageUrl->getUri())) {
+            $this->log("Link {$link} is doesn't have {$pageUrl->getUri()} part", 4);
             return false;
         } elseif (false !== strpos($link, 'javascript:') || false !== strpos($link, 'tel:') || false !== strpos($link, 'mailto:')) {
             return false;
@@ -558,19 +397,20 @@ class Sitemap
                 throw new \InvalidArgumentException($path . " is not a directory");
             }
 
-            $links = $this->storage->loadScan($this->url);
-            $chunks = array_chunk($links, $this->fileLinksLimit);
+            /**
+             * @var $pageUrl Url
+             */
+            $pageUrl = $this->config->get('url');
+
+            $links = $this->storage->loadScan($pageUrl->getUrl());
+            $chunks = array_chunk($links, $this->config->get('limits.linksPerFile'));
 
             $sitemap = [];
             $sitemapPath = null;
 
             foreach ($chunks as $key => $chunk) {
                 if (1 === count($chunks)) {
-                    if ($this->async) {
-                        $sitemapPath = $path . "/sitemap_a.xml";
-                    } else {
-                        $sitemapPath = $path . "/sitemap.xml";
-                    }
+                    $sitemapPath = $path . "/sitemap.xml";
                 } else {
                     $index = $key + 1;
                     $sitemapPath = $path . "/sitemap_{$index}.xml";
@@ -603,21 +443,11 @@ class Sitemap
                 ['index' => $sitemapsIndexPath, 'sitemaps' => $sitemap] :
                 ['sitemap' => $sitemapPath]);
 
-        } catch (\RunTimeException $e) {
+        } catch (\RuntimeException $e) {
             echo $e->getMessage();
 
             return false;
         }
-    }
-
-    /**
-     * @return mixed
-     */
-    private function uri()
-    {
-        return $this->path .
-            (($this->query) ? ('?' . $this->query) : '') .
-            (($this->fragment) ? ('#' . $this->fragment) : '');
     }
 
     /**
@@ -652,20 +482,23 @@ class Sitemap
      */
     private function loadPage($url, $async = false)
     {
-        if (false === strpos($url, $this->host)) {
-            $url = $this->protocol . '://' . $this->host . '/' . ltrim($url, '/');
+        /** @var Url $pageUrl */
+        $pageUrl = $this->config->get('url');
+
+        if (false === strpos($url, $pageUrl->getHost())) {
+            $url = $pageUrl->getProtocol() . '://' . $pageUrl->getHost() . '/' . ltrim($url, '/');
         }
 
-        if ($this->sleepTimeout) {
-            sleep($this->sleepTimeout);
+        if ($sleepTimeout = $this->config->get('timeouts.sleep')) {
+            sleep($sleepTimeout);
         }
 
         try {
             $options = [
-                "timeout" => $this->timeout,
+                'timeout' => $this->config->get('timeouts.request'),
                 'allow_redirects' => true,
-                "headers" => [
-                    "User-Agent" => $this->userAgent
+                'headers' => [
+                    'User-Agent' => $this->config->get('userAgent')
                 ]
             ];
 
@@ -699,7 +532,8 @@ class Sitemap
             return false;
         } catch (RequestException $e) {
             if (429 === (int) $e->getCode()) {
-                $this->sleepTimeout += 0.5;
+                $sleepTimeout = $this->config->get('timeout.sleep');
+                $this->config->set('limits.sleep', $sleepTimeout + 0.5);
             }
             $this->log('Error! Url: ' . $url . '. ' . $e->getMessage());
             return false;
@@ -713,12 +547,16 @@ class Sitemap
      */
     private function executeCallback($force = false)
     {
-        if ($this->scanned && $this->callback && $this->callbackFrequency) {
-            if (0 === (count($this->scanned) % $this->callbackFrequency) || $force) {
+        if ($this->scanned && $this->config->get('onProgress')) {
+            if (0 === (count($this->scanned) % $this->config->get('onProgress.frequency')) || $force) {
+                /** @var Url $siteUrl */
+                $siteUrl = $this->config->get('url');
+                $callable = $this->config->get('onProgress.callable');
+
                 call_user_func(
-                    $this->callback,
+                    $callable,
                     $this->scanned,
-                    $this->storage->loadScan($this->url),
+                    $this->storage->loadScan($siteUrl->getUrl()),
                     $this->queue
                 );
             }
@@ -734,8 +572,12 @@ class Sitemap
         if (0 === strpos($url, '.')) {
             $url = substr($url, 1);
         }
-        $host = $this->protocol . '://' . $this->host;
-        return $host . '/' . ltrim(str_replace([$this->protocol . '://', $this->host], '', $url), '/');
+        /** @var Url $siteUrl */
+        $siteUrl = $this->config->get('url');
+
+        $host = $siteUrl->getProtocol() . '://' . $siteUrl->getHost();
+
+        return $host . '/' . ltrim(str_replace([$siteUrl->getProtocol() . '://', $siteUrl->getHost()], '', $url), '/');
     }
 
     /**
@@ -744,7 +586,10 @@ class Sitemap
      */
     private function getUrlDepth($url)
     {
-        $url = trim(str_replace([$this->protocol . '://', $this->host], '', $url), '/');
+        /** @var Url $siteUrl */
+        $siteUrl = $this->config->get('url');
+
+        $url = trim(str_replace([$siteUrl->getProtocol() . '://', $siteUrl->getHost()], '', $url), '/');
         return count(explode('/', $url));
     }
 
@@ -754,9 +599,12 @@ class Sitemap
     private function loadRobots()
     {
         try {
-            $response = $this->client->get($this->url . '/robots.txt', [
-                "headers" => [
-                    "User-Agent" => $this->userAgent
+            /** @var Url $siteUrl */
+            $siteUrl = $this->config->get('url');
+
+            $response = $this->client->get($siteUrl->getUrl() . '/robots.txt', [
+                'headers' => [
+                    'User-Agent' => $this->config->get('userAgent')
                 ]
             ]);
 
@@ -771,7 +619,7 @@ class Sitemap
                     if (empty($rule) || false === strpos($rule, ":")) {
                         continue;
                     }
-                    $rule = explode(":", $rule);
+                    $rule = explode(':', $rule);
                     if (preg_match("@^disallow$@i", $rule[0])) {
                         $patterns[] = $rule[1];
                     }
@@ -817,21 +665,30 @@ class Sitemap
      */
     private function generateSitemapsIndex($amount)
     {
+        /** @var Url $siteUrl */
+        $siteUrl = $this->config->get('url');
+        $host = $siteUrl->getHost();
+
         $xml = new \XMLWriter();
         $xml->openMemory();
         $xml->setIndent(true);
         $xml->startDocument();
         $xml->startElement('sitemapindex');
         $xml->writeAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+
+        $sitemapIndex = 1;
+
         while ($amount--) {
-            $index = $amount + 1;
+            $index = $sitemapIndex++;
             $xml->startElement('sitemap');
-            $xml->writeElement('loc', $this->host . "/sitemap_{$index}.xml");
+            $xml->writeElement('loc', $host . "/sitemap_{$index}.xml");
             $xml->writeElement('lastmod', date('Y-m-d\TH:i:sP'));
             $xml->endElement();
         }
+
         $xml->endElement();
         $xml->endDocument();
+
         return $xml->outputMemory(true);
     }
 
@@ -841,18 +698,21 @@ class Sitemap
      */
     private function log($message, $padding = 0)
     {
-        if ($this->debug) {
+        if ($this->config->get('debug.enable')) {
             if (is_array($message)) {
                 $message = print_r($message, true);
             } elseif (is_object($message)) {
                 $message = var_export($message);
             }
-            if (1 == $this->debugMode) {
+            if ($this->config->get('debug.mode') === Config::DEBUG_STDOUT) {
                 echo str_repeat("\t", $padding) . $message . PHP_EOL;
-            } elseif (2 === $this->debugMode) {
+            } elseif ($this->config->get('debug.mode') === Config::DEBUG_FILE) {
                 echo str_repeat("\t", $padding) . $message . PHP_EOL;
-                if (is_writable($this->logFile)) {
-                    file_put_contents($this->logFile, str_repeat("\t", $padding) . $message . PHP_EOL, FILE_APPEND);
+
+                $logFile = $this->config->get('debug.logFile');
+
+                if (is_writable($logFile)) {
+                    file_put_contents($logFile, str_repeat("\t", $padding) . $message . PHP_EOL, FILE_APPEND);
                 }
             }
         }
