@@ -363,7 +363,7 @@ class Sitemap
             return false;
         } else {
             foreach ($this->excludePatterns as $pattern) {
-                if (preg_match('@' . $pattern . '@', $link)) {
+                if (preg_match('@' . preg_quote($pattern, '@') . '@', $link)) {
                     $this->log("Link {$link} is incorrect according to rule {$pattern}", 4);
                     return false;
                 }
@@ -379,7 +379,7 @@ class Sitemap
     private function checkContent($html)
     {
         foreach ($this->contentExcludePatterns as $pattern) {
-            if (preg_match('@' . $pattern . '@iu', $html)) {
+            if (preg_match('@' . preg_quote($pattern, '@') . '@iu', $html)) {
                 return false;
             }
         }
