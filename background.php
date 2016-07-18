@@ -43,11 +43,11 @@ $redis->setOption(Redis::OPT_PREFIX, 'site_crawler:');
 
 $storage = new vedebel\sitemap\storages\RedisLinksStorage($redis, 'test');
 
-$config = new \vedebel\sitemap\Config(new \vedebel\sitemap\Url('http://seo-studio.ua'), [
+$config = new \vedebel\sitemap\Config(new \vedebel\sitemap\Url($url), [
     'limits' => [
         'threads' => $threadsLimit,
         'linksTotal' => $limit,
-        'linksPerFile' => 50
+        'linksPerFile' => 50000
     ],
     'debug' => [
         'enable' => true
